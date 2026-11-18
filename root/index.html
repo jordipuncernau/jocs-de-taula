@@ -1,0 +1,433 @@
+<!doctype html>
+<html lang="ca">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style>
+<meta name="theme-color" content="#1c2620">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Root">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<title>Root · Taula de joc</title>
+<style>
+@font-face{font-family:'Alegreya Sans SC';font-style:normal;font-weight:700;font-display:swap;src:url(fonts/alegreya-sans-sc-latin-700-normal.woff2) format('woff2')}
+@font-face{font-family:'Alegreya Sans SC';font-style:normal;font-weight:800;font-display:swap;src:url(fonts/alegreya-sans-sc-latin-800-normal.woff2) format('woff2')}
+@font-face{font-family:'Alegreya Sans';font-style:normal;font-weight:400;font-display:swap;src:url(fonts/alegreya-sans-latin-400-normal.woff2) format('woff2')}
+@font-face{font-family:'Alegreya Sans';font-style:normal;font-weight:500;font-display:swap;src:url(fonts/alegreya-sans-latin-500-normal.woff2) format('woff2')}
+@font-face{font-family:'Alegreya Sans';font-style:normal;font-weight:700;font-display:swap;src:url(fonts/alegreya-sans-latin-700-normal.woff2) format('woff2')}
+@font-face{font-family:'JetBrains Mono';font-style:normal;font-weight:500;font-display:swap;src:url(fonts/jetbrains-mono-latin-500-normal.woff2) format('woff2')}
+/* Layout: una columna d'eina; capçalera amb pestanyes, fitxes de jugador en graella que s'apila al mòbil */
+:root{
+  --bg:#e9eee6; --surface:#f7f9f4; --line:#c9d3c2; --fg:#1f2a20; --muted:#5b6a5a; --accent:#b8741a; --accent-fg:#fff;
+  --ok:#2f7d4a; --warn:#a4462b;
+  --f-display:"Alegreya Sans SC", "Trebuchet MS", sans-serif;
+  --f-body:"Alegreya Sans", "Segoe UI", system-ui, sans-serif;
+  --f-mono:"JetBrains Mono", ui-monospace, monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#141b16; --surface:#1c2620; --line:#2f3d33; --fg:#e4ebe1; --muted:#9aab99; --accent:#e0a246; --accent-fg:#1a1408; --ok:#6cc48a; --warn:#e98a6c; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#141b16; --surface:#1c2620; --line:#2f3d33; --fg:#e4ebe1; --muted:#9aab99; --accent:#e0a246; --accent-fg:#1a1408; --ok:#6cc48a; --warn:#e98a6c; color-scheme:dark}
+
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:16px;line-height:1.45;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 48px}
+.wrap{max-width:980px;margin:0 auto;display:flex;flex-direction:column;gap:20px}
+header{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px}
+h1{font-family:var(--f-display);font-size:2.2rem;margin:0;letter-spacing:.02em;line-height:1}
+h1 small{display:block;font-family:var(--f-body);font-size:.95rem;font-weight:500;color:var(--muted);letter-spacing:0;margin-top:4px}
+h2{font-family:var(--f-display);font-size:1.25rem;margin:0;letter-spacing:.03em;text-wrap:balance}
+.tabs{display:flex;gap:4px;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:4px}
+.tabs button{border:0;background:none;color:var(--muted);font:600 .95rem var(--f-body);padding:8px 14px;border-radius:7px;cursor:pointer}
+.tabs button[aria-selected="true"]{background:var(--accent);color:var(--accent-fg)}
+section.panel{display:flex;flex-direction:column;gap:16px}
+.box{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px;display:flex;flex-direction:column;gap:12px}
+.row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.label{font-size:.78rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:700}
+button.btn{font:600 .95rem var(--f-body);border:1px solid var(--line);background:var(--bg);color:var(--fg);border-radius:8px;padding:8px 14px;cursor:pointer}
+button.btn:hover{border-color:var(--accent)}
+button.primary{background:var(--accent);color:var(--accent-fg);border-color:var(--accent)}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.seg{display:flex;gap:4px}
+.seg button{min-width:40px}
+.seg button[aria-pressed="true"]{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+.factions{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:8px}
+.fac{display:flex;align-items:center;gap:10px;padding:8px 10px;border:1px solid var(--line);border-radius:8px;cursor:pointer;background:var(--bg)}
+.fac input{accent-color:var(--accent);width:18px;height:18px}
+.dot{width:14px;height:14px;border-radius:50%;flex:none;box-shadow:0 0 0 2px var(--surface)}
+.fac .name{flex:1;min-width:0;font-weight:600;line-height:1.2}
+.fac .name span{display:block;font-weight:400;font-size:.8rem;color:var(--muted)}
+.reach{font-family:var(--f-mono);font-size:.85rem;color:var(--muted)}
+.meter{display:flex;align-items:center;gap:10px;font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+.pill{display:inline-block;font-size:.78rem;font-weight:700;padding:2px 8px;border-radius:99px;border:1px solid currentColor}
+.pill.ok{color:var(--ok)} .pill.bad{color:var(--warn)}
+.seats{display:flex;flex-direction:column;gap:8px}
+.seat{display:grid;grid-template-columns:28px 1fr minmax(0,190px);gap:10px;align-items:center}
+.seat .n{font-family:var(--f-mono);color:var(--muted)}
+input[type=text],select{font:inherit;color:var(--fg);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:7px 10px;width:100%;min-width:0}
+.players{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px}
+.pc{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:10px;border-top:6px solid var(--c)}
+.pc.turn{box-shadow:0 0 0 2px var(--accent)}
+.pc .top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
+.pc .who{min-width:0}
+.pc .who b{display:block;font-size:1.1rem;overflow-wrap:anywhere}
+.pc .who span{font-size:.85rem;color:var(--muted)}
+.score{font-family:var(--f-display);font-size:3rem;line-height:.9;font-variant-numeric:tabular-nums}
+.score small{font-size:1rem;color:var(--muted)}
+.bar{height:6px;background:var(--bg);border-radius:3px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--c)}
+.pc .btns{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+.pc .btns button{padding:8px 0}
+.dom{font-size:.85rem}
+.dom select{padding:4px 6px}
+.turnbox{display:grid;grid-template-columns:1fr auto;gap:12px;align-items:start}
+.phases{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.ph{border:1px solid var(--line);border-radius:8px;padding:10px;background:var(--bg);font-size:.92rem;min-width:0}
+.ph h3{margin:0 0 4px;font:700 .78rem var(--f-body);text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
+.ph.on{border-color:var(--accent)}
+.ph.on h3{color:var(--accent)}
+.log{font-family:var(--f-mono);font-size:.82rem;color:var(--muted);max-height:180px;overflow:auto;display:flex;flex-direction:column;gap:2px}
+.banner{background:var(--accent);color:var(--accent-fg);border-radius:12px;padding:14px 16px;font-weight:700;font-size:1.1rem}
+.note{font-size:.85rem;color:var(--muted)}
+.confirm{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.tabs{flex-wrap:wrap}
+.lesson{display:grid;grid-template-columns:220px minmax(0,1fr);gap:16px;align-items:start}
+.toc{display:flex;flex-direction:column;gap:2px;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:8px}
+.toc button{text-align:left;border:0;background:none;color:var(--muted);font:500 .92rem var(--f-body);padding:7px 10px;border-radius:7px;cursor:pointer;display:flex;gap:8px}
+.toc button b{font-family:var(--f-mono);font-weight:500;font-size:.8rem;min-width:1.4em}
+.toc button[aria-current="true"]{background:var(--bg);color:var(--fg);font-weight:700}
+.toc button.done b{color:var(--ok)}
+.lbody{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:20px;display:flex;flex-direction:column;gap:14px;min-width:0}
+.lbody h2{font-size:1.6rem}
+.lbody p{margin:0;max-width:66ch}
+.lbody ul{margin:0;padding-left:1.2em;max-width:66ch;display:flex;flex-direction:column;gap:4px}
+.key{border-left:4px solid var(--accent);background:var(--bg);padding:10px 14px;border-radius:0 8px 8px 0;max-width:66ch}
+.fig{background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:10px;overflow-x:auto}
+.fig svg{display:block;width:100%;max-width:560px;height:auto;margin:0 auto}
+.fig svg text{fill:var(--fg);font-family:var(--f-body)}
+.lnav{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;border-top:1px solid var(--line);padding-top:14px}
+.tbl{overflow-x:auto}
+.tbl table{border-collapse:collapse;width:100%;font-size:.92rem;min-width:520px}
+.tbl th,.tbl td{text-align:left;padding:8px;border-bottom:1px solid var(--line);vertical-align:top}
+.tbl th{font-size:.75rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
+.lvl{font-family:var(--f-mono);letter-spacing:.1em;color:var(--accent)}
+.sim{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+.sim label{display:flex;flex-direction:column;gap:4px;font-size:.85rem;color:var(--muted)}
+.sim input[type=number]{font:inherit;color:var(--fg);background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:7px 10px;width:100%}
+.dice{display:flex;gap:10px;align-items:center;flex-wrap:wrap;font-variant-numeric:tabular-nums}
+.die{width:48px;height:48px;border-radius:10px;display:grid;place-items:center;font:700 1.5rem var(--f-mono);border:2px solid var(--line);background:var(--surface)}
+.die.a{border-color:var(--warn)} .die.d{border-color:var(--ok)}
+.quiz{display:flex;flex-direction:column;gap:14px}
+.q{display:flex;flex-direction:column;gap:6px}
+.q .opts{display:flex;flex-wrap:wrap;gap:6px}
+.q button.right{background:var(--ok);color:var(--bg);border-color:var(--ok)}
+.q button.wrong{background:var(--warn);color:var(--bg);border-color:var(--warn)}
+.q .why{font-size:.88rem;color:var(--muted)}
+@media (max-width:760px){.lesson{grid-template-columns:1fr}.toc{flex-direction:row;overflow-x:auto}.toc button{white-space:nowrap}.toc button span{display:none}}
+@media (max-width:620px){.phases{grid-template-columns:1fr}.turnbox{grid-template-columns:1fr}.seat{grid-template-columns:24px 1fr}.seat select{grid-column:2}}
+@media (prefers-reduced-motion:no-preference){.bar i{transition:width .3s}}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <h1>Root<small>Preparació i marcador de partida</small></h1>
+    <div class="tabs" role="tablist">
+      <button role="tab" id="tab-setup" aria-selected="true">Preparació</button>
+      <button role="tab" id="tab-game" aria-selected="false">Partida</button>
+      <button role="tab" id="tab-learn" aria-selected="false">Aprèn a jugar</button>
+    </div>
+  </header>
+
+  <section class="panel" id="p-setup">
+    <div class="box">
+      <h2>Jugadors</h2>
+      <div class="row"><span class="label">Nombre</span><div class="seg" id="ncount"></div></div>
+      <div class="meter" id="meter"></div>
+      <label class="row note"><input type="checkbox" id="militant" checked> Exigir com a mínim una facció militant en el sorteig</label>
+    </div>
+
+    <div class="box">
+      <div class="row" style="justify-content:space-between"><h2>Faccions disponibles</h2><span class="note">Marca les que tens a la capsa. El número és l'abast.</span></div>
+      <div class="factions" id="factions"></div>
+    </div>
+
+    <div class="box">
+      <div class="row" style="justify-content:space-between">
+        <h2>Seients i faccions</h2>
+        <div class="row"><button class="btn" id="draw">Sorteja faccions</button><button class="btn" id="shuffle">Barreja l'ordre</button></div>
+      </div>
+      <div class="seats" id="seats"></div>
+      <div class="row"><button class="btn primary" id="start">Comença la partida</button><span class="note" id="startmsg"></span></div>
+    </div>
+  </section>
+
+  <section class="panel" id="p-game" hidden>
+    <div id="winner"></div>
+    <div class="box">
+      <div class="turnbox">
+        <div><span class="label">Torn <span id="round"></span></span><h2 id="turnwho"></h2></div>
+        <div class="row"><button class="btn" id="prevph">◀ Fase</button><button class="btn primary" id="nextph">Fase següent ▶</button></div>
+      </div>
+      <div class="phases" id="phases"></div>
+    </div>
+    <div class="players" id="players"></div>
+    <div class="box">
+      <div class="row" style="justify-content:space-between"><h2>Registre</h2>
+        <div class="row"><button class="btn" id="undo">Desfés</button><span class="confirm" id="resetzone"><button class="btn" id="reset">Nova partida</button></span></div></div>
+      <div class="log" id="log"></div>
+    </div>
+  </section>
+
+  <section class="panel" id="p-learn" hidden>
+    <div class="lesson">
+      <nav class="toc" id="toc" aria-label="Lliçons"></nav>
+      <article class="lbody" id="lbody"></article>
+    </div>
+  </section>
+</div>
+
+<script>
+const F=[
+ {id:'mq',n:'Marquesa dels Gats',en:'Marquise de Cat',d:'Gats · indústria',c:'#e07a1f',r:10,m:1,p:['Una fusta a cada serradora.','Fins a 3 accions: batalla, marxa, recluta, construeix, treballa o sobrevalora. Descarta ocells per a accions extra.','Roba 1 carta + 1 per cada icona de roba desplegada.']},
+ {id:'ey',n:'Dinasties de l\'Aguilera',en:'Eyrie Dynasties',d:'Ocells · decret',c:'#3d6fb6',r:7,m:1,p:['Afegeix 1-2 cartes al decret (només 1 ocell).','Crea cartes i resol el decret d\'esquerra a dreta. Si no pots complir-lo: desordre.','Puntua segons els nius i roba cartes.']},
+ {id:'wa',n:'Aliança del Bosc',en:'Woodland Alliance',d:'Rebels · simpatia',c:'#4f9a3e',r:3,m:0,p:['Revolta i difon la simpatia amb seguidors.','Crea cartes, mobilitza i entrena oficials.','Operacions militars amb els oficials. Roba cartes.']},
+ {id:'vb',n:'El Rodamón',en:'Vagabond',d:'Os rentador · objectes',c:'#8a8f96',r:5,m:0,p:['Gira objectes esgotats; mou-te fora del bosc si cal.','Esgota objectes per moure\'t, explorar, ajudar, encàrrecs, batallar…','Repara a un bosc i roba cartes. Controla el límit d\'objectes.']},
+ {id:'vb2',n:'El Rodamón (2n)',en:'Second Vagabond',d:'Requereix el 1r Rodamón',c:'#5f656c',r:2,m:0,p:['Com el Rodamón.','Com el Rodamón.','Com el Rodamón.']},
+ {id:'rf',n:'Companyia del Riu',en:'Riverfolk Company',d:'Llúdrigues · comerç',c:'#2a9d9a',r:5,m:0,p:['Cobra serveis i protecció; puntua dividends.','Gasta fondos: mou, batalla, construeix punts de comerç, recluta, crea.','Roba cartes i fixa preus dels serveis.']},
+ {id:'lc',n:'Culte del Llangardaix',en:'Lizard Cult',d:'Llangardaixos · conversos',c:'#d9b42a',r:2,m:0,p:['Revolta i difon el culte amb els desheretats.','Rituals: construeix, recluta, puntua o sacrifica.','Accions dels acòlits i roba cartes.']},
+ {id:'ud',n:'Ducat Subterrani',en:'Underground Duchy',d:'Talps · ministres',c:'#b08a5a',r:8,m:1,p:['Recluta al túnel.','Assemblea: construeix, recluta, mou, cava, batalla; i parla amb ministres.','Reprèn i roba cartes.']},
+ {id:'cc',n:'Conspiració dels Corbs',en:'Corvid Conspiracy',d:'Corbs · complots',c:'#7b4fa8',r:3,m:0,p:['Crea i recluta.','Complota, gira complots, mou i batalla.','Exerceix i roba cartes.']},
+ {id:'lh',n:'Senyor dels Centenars',en:'Lord of the Hundreds',d:'Rates · senyor de la guerra',c:'#c0392b',r:9,m:1,p:['Incita amb el senyor de la guerra i apliquen els humors.','Comanda i avança segons els dominis.','Saqueja, puntua tresor i roba cartes.']},
+ {id:'ki',n:'Guardians de Ferro',en:'Keepers in Iron',d:'Teixons · relíquies',c:'#6e7f8c',r:8,m:1,p:['Recluta i reorganitza el reconeixement.','Fes les accions dels serveis fidels; recupera i lliura relíquies.','Roba cartes i resol els fidels.']},
+];
+const TH={2:17,3:18,4:21,5:25,6:28};
+const PH=['Alba (Birdsong)','Dia (Daylight)','Vespre (Evening)'];
+const byId=Object.fromEntries(F.map(f=>[f.id,f]));
+const $=s=>document.querySelector(s);
+const KEY='root-companion-v1';
+let S;
+function fresh(){return{tab:'setup',n:4,owned:['mq','ey','wa','vb'],militant:true,seats:[{name:'',f:''},{name:'',f:''},{name:'',f:''},{name:'',f:''}],game:null};}
+function sample(){const s=fresh();s.owned=F.map(f=>f.id);s.seats=[{name:'Anna',f:'mq'},{name:'Pau',f:'ey'},{name:'Marta',f:'wa'},{name:'Joan',f:'vb'}];return s;}
+try{S=JSON.parse(localStorage.getItem(KEY))||sample();}catch(e){S=sample();}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}}
+
+function reachOf(ids){return ids.reduce((a,id)=>a+(byId[id]?byId[id].r:0),0);}
+function valid(ids){
+  if(ids.includes('vb2')&&!ids.includes('vb'))return false;
+  if(S.militant&&!ids.some(id=>byId[id].m))return false;
+  return reachOf(ids)>=TH[S.n];
+}
+
+function renderSetup(){
+  $('#ncount').innerHTML=[2,3,4,5,6].map(k=>`<button class="btn" aria-pressed="${k===S.n}" data-n="${k}">${k}</button>`).join('');
+  $('#factions').innerHTML=F.map(f=>`<label class="fac"><input type="checkbox" data-own="${f.id}" ${S.owned.includes(f.id)?'checked':''}><i class="dot" style="background:${f.c}"></i><span class="name">${f.n}<span>${f.en} · ${f.d}${f.m?' · militant':''}</span></span><span class="reach">${f.r}</span></label>`).join('');
+  const opts=['<option value="">— Facció —</option>'].concat(F.filter(f=>S.owned.includes(f.id)).map(f=>`<option value="${f.id}">${f.n}</option>`)).join('');
+  $('#seats').innerHTML=S.seats.map((s,i)=>`<div class="seat"><span class="n">${i+1}</span><input type="text" id="nm${i}" data-name="${i}" placeholder="Jugador ${i+1}" value="${esc(s.name)}"><select id="fs${i}" data-f="${i}">${opts}</select></div>`).join('');
+  S.seats.forEach((s,i)=>{$('#fs'+i).value=s.f;});
+  const ids=S.seats.map(s=>s.f).filter(Boolean),r=reachOf(ids),t=TH[S.n],ok=r>=t;
+  $('#meter').innerHTML=`<span class="label">Abast</span><span>${r} / ${t} mínim</span><span class="pill ${ok?'ok':'bad'}">${ok?'Partida equilibrada':'Abast insuficient'}</span>`;
+}
+function esc(s){return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+
+function setN(n){S.n=n;while(S.seats.length<n)S.seats.push({name:'',f:''});S.seats.length=n;save();renderSetup();}
+function draw(){
+  const pool=S.owned.slice();
+  if(pool.length<S.n){msg('No hi ha prou faccions marcades.');return;}
+  for(let t=0;t<4000;t++){
+    const p=pool.slice().sort(()=>Math.random()-.5).slice(0,S.n);
+    if(valid(p)){S.seats.forEach((s,i)=>s.f=p[i]);save();renderSetup();msg('');return;}
+  }
+  msg('Cap combinació de les faccions marcades arriba a l\'abast mínim.');
+}
+function shuffle(){S.seats.sort(()=>Math.random()-.5);save();renderSetup();}
+function msg(t){$('#startmsg').textContent=t;}
+function start(){
+  const fs=S.seats.map(s=>s.f);
+  if(fs.some(f=>!f)){msg('Assigna una facció a cada seient.');return;}
+  if(new Set(fs).size!==fs.length){msg('Hi ha faccions repetides.');return;}
+  if(fs.includes('vb2')&&!fs.includes('vb')){msg('El 2n Rodamón necessita el 1r.');return;}
+  S.game={players:S.seats.map((s,i)=>({name:s.name.trim()||('Jugador '+(i+1)),f:s.f,score:0,dom:''})),turn:0,phase:0,round:1,log:[],hist:[]};
+  S.tab='game';save();render();
+}
+
+function push(){const g=S.game;g.hist.push(JSON.stringify({players:g.players,turn:g.turn,phase:g.phase,round:g.round,log:g.log}));if(g.hist.length>80)g.hist.shift();}
+function addLog(t){S.game.log.unshift(`T${S.game.round} · ${t}`);}
+function score(i,d){const g=S.game,p=g.players[i];if(p.dom)return;push();p.score=Math.max(0,p.score+d);addLog(`${p.name} ${d>0?'+':''}${d} → ${p.score}`);save();renderGame();}
+function setDom(i,v){const g=S.game,p=g.players[i];push();p.dom=v;addLog(v?`${p.name} juga dominació (${v})`:`${p.name} retira la dominació`);save();renderGame();}
+function phase(d){const g=S.game;push();g.phase+=d;
+  if(g.phase>2){g.phase=0;g.turn++;if(g.turn>=g.players.length){g.turn=0;g.round++;}}
+  if(g.phase<0){g.phase=2;g.turn--;if(g.turn<0){g.turn=g.players.length-1;g.round=Math.max(1,g.round-1);}}
+  save();renderGame();}
+function undo(){const g=S.game;if(!g.hist.length)return;Object.assign(g,JSON.parse(g.hist.pop()));save();renderGame();}
+
+function renderGame(){
+  const g=S.game;if(!g)return;
+  const cur=g.players[g.turn],cf=byId[cur.f];
+  $('#round').textContent=g.round;
+  $('#turnwho').innerHTML=`<i class="dot" style="display:inline-block;background:${cf.c};vertical-align:middle"></i> ${esc(cur.name)} · ${cf.n}`;
+  $('#phases').innerHTML=PH.map((h,k)=>`<div class="ph ${k===g.phase?'on':''}"><h3>${h}</h3>${cf.p[k]}</div>`).join('');
+  const lead=g.players.find(p=>p.score>=30);
+  $('#winner').innerHTML=lead?`<div class="banner">${esc(lead.name)} arriba a 30 punts i guanya la partida.</div>`:'';
+  $('#players').innerHTML=g.players.map((p,i)=>{const f=byId[p.f];
+    return `<div class="pc ${i===g.turn?'turn':''}" style="--c:${f.c}">
+      <div class="top"><div class="who"><b>${esc(p.name)}</b><span>${f.n}</span></div>
+      <div class="score">${p.dom?'—':p.score}<small>${p.dom?'':'/30'}</small></div></div>
+      <div class="bar"><i style="width:${Math.min(100,p.score/30*100)}%"></i></div>
+      <div class="btns">${[-1,1,2,3,5].map(d=>`<button class="btn" data-sc="${i}" data-d="${d}" ${p.dom?'disabled':''}>${d>0?'+':''}${d}</button>`).join('')}</div>
+      <label class="row dom">Dominació <select id="dom${i}" data-dom="${i}"><option value="">Cap</option><option>Guineu</option><option>Conill</option><option>Ratolí</option><option>Ocell</option><option>Coalició</option></select></label>
+    </div>`;}).join('');
+  g.players.forEach((p,i)=>{$('#dom'+i).value=p.dom;});
+  $('#log').innerHTML=g.log.length?g.log.map(l=>`<div>${esc(l)}</div>`).join(''):'<div>Encara no hi ha moviments.</div>';
+}
+
+/* ---------- Tutorial ---------- */
+const SUIT={fox:'#d2452f',rab:'#e3b62b',mou:'#e5812a',bird:'#3d7fc4'};
+const boardSvg=`<svg viewBox="0 0 560 230" role="img" aria-label="Tres clarianes unides per camins, amb un bosc entre elles">
+  <polygon points="140,70 420,70 280,190" fill="${'#4f9a3e'}" opacity=".18"/>
+  <text x="280" y="122" text-anchor="middle" font-size="14" opacity=".8">bosc</text>
+  <g stroke="currentColor" stroke-width="4" stroke-dasharray="2 8" stroke-linecap="round" opacity=".55">
+    <line x1="140" y1="70" x2="420" y2="70"/><line x1="140" y1="70" x2="280" y2="190"/><line x1="420" y1="70" x2="280" y2="190"/></g>
+  <text x="280" y="60" text-anchor="middle" font-size="13" opacity=".8">camí</text>
+  ${[[140,70,'fox','Guineu'],[420,70,'rab','Conill'],[280,190,'mou','Ratolí']].map(([x,y,s,n])=>`
+  <circle cx="${x}" cy="${y}" r="38" fill="${SUIT[s]}" opacity=".9"/>
+  <rect x="${x-14}" y="${y-14}" width="28" height="28" rx="4" fill="none" stroke="#fff" stroke-width="2.5"/>
+  <text x="${x}" y="${y+58}" text-anchor="middle" font-size="15" font-weight="700">${n}</text>`).join('')}
+  <text x="140" y="75" text-anchor="middle" font-size="11" style="fill:#fff">ranura</text>
+</svg>`;
+const ruleSvg=`<svg viewBox="0 0 560 170" role="img" aria-label="Tres exemples de qui governa una clariana">
+  ${[[95,'Gats governen',[['#e07a1f',3]],[['#3d6fb6',2]],'3 contra 2'],[280,'Empat: ningú',[['#e07a1f',2]],[['#4f9a3e',2]],'2 contra 2'],[465,'Empat amb ocells',[['#e07a1f',1]],[['#3d6fb6',1]],'els ocells guanyen']].map(([x,t,a,b,s])=>`
+  <circle cx="${x}" cy="70" r="52" fill="none" stroke="currentColor" stroke-width="2" opacity=".5"/>
+  ${[...Array(a[0][1])].map((_,i)=>`<circle cx="${x-28+i*0}" cy="${48+i*20}" r="8" fill="${a[0][0]}"/>`).join('')}
+  ${[...Array(b[0][1])].map((_,i)=>`<circle cx="${x+28}" cy="${48+i*20}" r="8" fill="${b[0][0]}"/>`).join('')}
+  <text x="${x}" y="140" text-anchor="middle" font-size="15" font-weight="700">${t}</text>
+  <text x="${x}" y="160" text-anchor="middle" font-size="12" opacity=".75">${s}</text>`).join('')}
+</svg>`;
+
+const L=[
+ {t:'De què va Root',h:`<p>Root és un joc de guerra i política al bosc. Cada jugador porta una facció que <b>juga amb regles pròpies</b>: uns construeixen indústria, uns altres segueixen un decret, uns altres fomenten revoltes o viatgen sols.</p>
+  <p>Per això s'aprèn en dues capes. Aquest tutorial t'explica la capa comuna (tauler, governar, moure, batallar i cartes). Després cada jugador només ha de llegir el tauler de la seva facció.</p>
+  <div class="key">Idea clau: no cal entendre totes les faccions per començar. Entén les regles comunes i la teva.</div>`},
+ {t:'Com es guanya',h:`<p>Guanya qui arriba primer a <b>30 punts de victòria</b>. Cada facció en guanya de manera diferent, però hi ha dues fonts compartides:</p>
+  <ul><li><b>Destruir</b> edificis i fitxes enemigues: 1 punt per peça.</li><li><b>Fabricar objectes</b> amb cartes: els punts estan impresos a la carta.</li></ul>
+  <p>Alternativa: <b>les cartes de dominació</b>. Si tens 10 punts o més, la pots jugar; el teu marcador surt del registre i a partir d'aquí guanyes si, a l'inici del teu torn, governes les clarianes que demana la carta (tres del vestit indicat; la d'ocell demana dues cantonades oposades).</p>
+  <div class="key">A la pestanya Partida pots marcar la dominació de cada jugador.</div>`},
+ {t:'El tauler',h:`<p>El bosc està format per <b>clarianes</b> unides per <b>camins</b>. Cada clariana té un <b>vestit</b>: guineu, conill o ratolí, i unes <b>ranures</b> on es poden construir edificis.</p>
+  <div class="fig">${boardSvg}</div>
+  <ul><li>Dues clarianes són adjacents si un camí les uneix.</li><li>Els espais tancats entre camins són <b>boscos</b>. Només el Rodamón s'hi pot amagar.</li><li>El vestit de la clariana importa per fabricar, per reclutar i per a moltes cartes.</li></ul>`},
+ {t:'Governar una clariana',h:`<p>Governes una clariana si hi tens <b>més guerrers i edificis sumats</b> que qualsevol altre jugador. Les fitxes no compten.</p>
+  <div class="fig">${ruleSvg}</div>
+  <ul><li>En cas d'empat no governa ningú.</li><li>Excepció: les <b>Dinasties de l'Aguilera</b> guanyen els empats, sempre que hi tinguin alguna peça.</li></ul>
+  <div class="key">Governar és la clau per moure't, per a moltes accions de facció i per a la dominació.</div>`},
+ {t:'Moure',h:`<p>Un moviment porta <b>tants guerrers com vulguis</b> d'una clariana a una d'adjacent.</p>
+  <p>Condició: has de <b>governar la clariana d'origen o la de destinació</b>. Si no governes cap de les dues, no hi pots anar.</p>
+  <ul><li>Cada moviment és una sola passa de camí. Per anar més lluny necessites més accions.</li><li>El Rodamón ignora aquesta norma i es mou per qualsevol camí.</li></ul>
+  <div class="key">Truc: abans d'atacar, comprova si podràs tornar enrere.</div>`},
+ {t:'Batallar',sim:1,h:`<p>L'atacant tria una clariana on tingui guerrers i un defensor que hi tingui alguna peça.</p>
+  <ul><li><b>Emboscades:</b> abans de tirar, el defensor pot jugar una emboscada del vestit de la clariana (o d'ocell) per fer 2 impactes directes. L'atacant la pot anul·lar amb una altra emboscada.</li>
+  <li>Es tiren <b>dos daus</b> (valors de 0 a 3). L'atacant fa els impactes del dau <b>alt</b> i el defensor els del <b>baix</b>.</li>
+  <li>Ningú no pot fer més impactes per dau que <b>guerrers propis</b> té a la clariana.</li>
+  <li>Si el defensor no hi té cap guerrer, és <b>indefens</b> i rep 1 impacte extra.</li>
+  <li>Cada impacte treu una peça. Primer guerrers; després edificis i fitxes, que donen <b>1 punt</b> a qui les destrueix.</li></ul>
+  <p class="label">Prova-ho</p>`},
+ {t:'Cartes',h:`<p>Les cartes tenen un vestit. Les d'<b>ocell</b> són comodins: compten com qualsevol vestit quan has de gastar o descartar una carta d'un vestit.</p>
+  <ul><li><b>Fabricar:</b> actives les teves peces de fabricació (que depenen de la facció) en clarianes del vestit que demana la carta. Pots obtenir un objecte amb punts o un efecte permanent.</li>
+  <li><b>Emboscada:</b> es juga quan et defenses (lliçó anterior).</li>
+  <li><b>Dominació:</b> via de victòria alternativa (lliçó 2).</li></ul>
+  <div class="key">Al final del teu torn no pots tenir més de 5 cartes a la mà: descarta l'excés.</div>`},
+ {t:'El torn',h:`<p>Tots els torns tenen tres fases, però cada facció fa coses diferents a cadascuna:</p>
+  <ul><li><b>Alba (Birdsong):</b> preparació, ingressos, efectes d'inici.</li><li><b>Dia (Daylight):</b> les accions principals: moure, batallar, construir, fabricar.</li><li><b>Vespre (Evening):</b> roba cartes, puntua i descarta fins a 5.</li></ul>
+  <p>A la pestanya <b>Partida</b> tens el torn actiu amb un recordatori de cada fase per a la facció que juga.</p>`},
+ {t:'Tria la facció',fac:1,h:`<p>Per a una primera partida, la combinació clàssica és la Marquesa dels Gats, les Dinasties de l'Aguilera, l'Aliança del Bosc i el Rodamón. La complexitat és orientativa.</p>`},
+ {t:'Primera partida',quiz:1,h:`<ul><li>Llegiu en veu alta el tauler de cada facció abans de començar.</li><li>Fixeu-vos en qui va primer al marcador: els jugadors s'han de frenar entre ells.</li><li>No ataquis per atacar: cada batalla també et desgasta.</li><li>Dubte de regles? Mana el reglament oficial (<i>Law of Root</i>).</li></ul>
+  <p class="label">Comprova què has après</p>`},
+];
+const FACT=[
+ ['mq','●○○','Construint serradores, tallers i reclutadors.','Molt present al tauler des del principi; la resta va a per tu.'],
+ ['ey','●●○','Amb nius, segons el decret.','Si no pots complir el decret, entres en desordre i perds punts.'],
+ ['wa','●●○','Escampant simpatia.','Lenta al principi i explosiva al final. No la deixis créixer.'],
+ ['vb','●●○','Encàrrecs, ajudar i atacar enemics.','Juga sol, es mou pels boscos i fa tractes amb tothom.'],
+ ['rf','●●●','Punts de comerç i dividends.','Ven serveis: els altres paguen amb cartes.'],
+ ['lc','●●●','Rituals amb cartes revelades.','Treu profit de les cartes que descarten els altres.'],
+ ['ud','●●●','Edificis i ministres.','Arriba al tauler pel túnel.'],
+ ['cc','●●●','Girant complots.','Fitxes amagades: blufeja.'],
+];
+const QZ=[
+ {q:'Tens 2 guerrers i un edifici en una clariana; un rival hi té 3 guerrers. Qui governa?',o:['Tu','El rival','Ningú'],a:2,w:'2+1=3 contra 3: empat, i en un empat no governa ningú (llevat de les Dinasties de l\'Aguilera).'},
+ {q:'Pots moure de A a B si no governes A però sí B?',o:['Sí','No'],a:0,w:'N\'hi ha prou de governar l\'origen o la destinació.'},
+ {q:'Ataques amb 1 guerrer i surten 3 i 0. Quants impactes fas?',o:['0','1','3'],a:1,w:'Els impactes de cada bàndol no poden superar els guerrers que té a la clariana.'},
+ {q:'Quantes cartes pots tenir com a màxim en acabar el torn?',o:['5','7','Sense límit'],a:0,w:'Descartes fins a quedar-te amb 5.'},
+];
+function lessonExtras(l){
+  if(l.sim)return `<div class="fig"><div class="sim">
+   <label>Guerrers de l'atacant<input type="number" id="sa" min="1" max="20" value="3"></label>
+   <label>Guerrers del defensor<input type="number" id="sd" min="0" max="20" value="2"></label>
+   <label>Edificis/fitxes del defensor<input type="number" id="sb" min="0" max="6" value="1"></label>
+   <label style="justify-content:flex-end"><button class="btn primary" id="roll">Tira els daus</button></label></div>
+   <div id="simout" class="note" style="margin-top:10px">Ajusta els valors i tira.</div></div>`;
+  if(l.fac)return `<div class="tbl"><table><thead><tr><th>Facció</th><th>Complexitat</th><th>Com puntua</th><th>Què cal saber</th></tr></thead><tbody>${FACT.map(([id,c,p,k])=>`<tr><td><i class="dot" style="display:inline-block;vertical-align:middle;background:${byId[id].c}"></i> <b>${byId[id].n}</b></td><td class="lvl">${c}</td><td>${p}</td><td>${k}</td></tr>`).join('')}</tbody></table></div>`;
+  if(l.quiz)return `<div class="quiz">${QZ.map((q,i)=>`<div class="q"><b>${i+1}. ${q.q}</b><div class="opts">${q.o.map((o,j)=>`<button class="btn" data-q="${i}" data-o="${j}">${o}</button>`).join('')}</div><div class="why" id="why${i}"></div></div>`).join('')}</div>`;
+  return '';
+}
+function renderLearn(){
+  const i=Math.min(S.lesson||0,L.length-1),l=L[i];S.seen=S.seen||[];if(!S.seen.includes(i))S.seen.push(i);
+  $('#toc').innerHTML=L.map((x,k)=>`<button data-les="${k}" aria-current="${k===i}" class="${S.seen.includes(k)?'done':''}"><b>${k+1}</b><span>${x.t}</span></button>`).join('');
+  $('#lbody').innerHTML=`<span class="label">Lliçó ${i+1} de ${L.length}</span><h2>${l.t}</h2>${l.h}${lessonExtras(l)}
+   <div class="lnav"><button class="btn" data-les="${i-1}" ${i===0?'disabled':''}>◀ Anterior</button>
+   ${i<L.length-1?`<button class="btn primary" data-les="${i+1}">Següent: ${L[i+1].t} ▶</button>`:`<button class="btn primary" id="golearnsetup">Prepara una partida ▶</button>`}</div>`;
+}
+function roll(){
+  const A=Math.max(1,+$('#sa').value||1),D=Math.max(0,+$('#sd').value||0),B=Math.max(0,+$('#sb').value||0);
+  const r1=Math.floor(Math.random()*4),r2=Math.floor(Math.random()*4),hi=Math.max(r1,r2),lo=Math.min(r1,r2);
+  let ah=Math.min(hi,A)+(D===0?1:0),dh=Math.min(lo,D);
+  const kw=Math.min(ah,D),kb=Math.min(ah-kw,B);
+  $('#simout').innerHTML=`<div class="dice"><span class="die a">${hi}</span><span class="note">atacant</span><span class="die d">${lo}</span><span class="note">defensor</span></div>
+   <p style="margin:8px 0 0">L'atacant fa <b>${ah}</b> impacte${ah===1?'':'s'}${D===0?' (inclou +1 per indefens)':''}${hi>A?`, limitat pels seus ${A} guerrers`:''}: treu ${kw} guerrer${kw===1?'':'s'}${kb?` i ${kb} edifici/fitxa (<b>+${kb} punt${kb===1?'':'s'}</b>)`:''}.
+   El defensor fa <b>${dh}</b> impacte${dh===1?'':'s'}${lo>D?` (limitat pels seus ${D} guerrers)`:''}.</p>`;
+}
+
+function render(){
+  let t=S.tab;if(t==='game'&&!S.game)t='setup';
+  ['setup','game','learn'].forEach(k=>{$('#p-'+k).hidden=k!==t;$('#tab-'+k).setAttribute('aria-selected',k===t);});
+  renderSetup();renderGame();renderLearn();
+}
+
+document.addEventListener('click',e=>{
+  const t=e.target.closest('button');if(!t)return;
+  if(t.dataset.n)setN(+t.dataset.n);
+  else if(t.dataset.sc)score(+t.dataset.sc,+t.dataset.d);
+  else if(t.id==='draw')draw();
+  else if(t.id==='shuffle')shuffle();
+  else if(t.id==='start')start();
+  else if(t.id==='nextph')phase(1);
+  else if(t.id==='prevph')phase(-1);
+  else if(t.id==='undo')undo();
+  else if(t.dataset.les!==undefined){S.lesson=+t.dataset.les;save();renderLearn();$('#lbody').scrollIntoView({block:'nearest'});}
+  else if(t.dataset.q!==undefined){const q=QZ[+t.dataset.q],ok=+t.dataset.o===q.a;t.parentNode.querySelectorAll('button').forEach(b=>b.classList.remove('right','wrong'));t.classList.add(ok?'right':'wrong');$('#why'+t.dataset.q).textContent=(ok?'Correcte. ':'No. ')+q.w;}
+  else if(t.id==='roll')roll();
+  else if(t.id==='tab-learn'){S.tab='learn';save();render();}
+  else if(t.id==='golearnsetup'){S.tab='setup';save();render();}
+  else if(t.id==='tab-setup'){S.tab='setup';save();render();}
+  else if(t.id==='tab-game'){if(!S.game){msg('Primer comença una partida.');return;}S.tab='game';save();render();}
+  else if(t.id==='reset'){$('#resetzone').innerHTML='<span class="note">Esborrar el marcador?</span><button class="btn primary" id="resetyes">Sí, nova partida</button><button class="btn" id="resetno">Cancel·la</button>';}
+  else if(t.id==='resetyes'){S.game=null;S.tab='setup';save();$('#resetzone').innerHTML='<button class="btn" id="reset">Nova partida</button>';render();}
+  else if(t.id==='resetno'){$('#resetzone').innerHTML='<button class="btn" id="reset">Nova partida</button>';}
+});
+document.addEventListener('change',e=>{
+  const t=e.target;
+  if(t.dataset.own){const id=t.dataset.own;S.owned=t.checked?[...S.owned,id]:S.owned.filter(x=>x!==id);S.seats.forEach(s=>{if(!S.owned.includes(s.f))s.f='';});save();renderSetup();}
+  else if(t.dataset.f!==undefined){S.seats[+t.dataset.f].f=t.value;save();renderSetup();}
+  else if(t.dataset.dom!==undefined)setDom(+t.dataset.dom,t.value);
+  else if(t.id==='militant'){S.militant=t.checked;save();}
+});
+document.addEventListener('input',e=>{const t=e.target;if(t.dataset.name!==undefined){S.seats[+t.dataset.name].name=t.value;save();}});
+$('#militant').checked=S.militant;
+render();
+</script>
+<script>if('serviceWorker' in navigator){addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));}</script>
+</body>
+</html>
