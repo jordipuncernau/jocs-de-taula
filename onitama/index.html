@@ -1,0 +1,802 @@
+<!doctype html>
+<html lang="ca">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#15120e">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Onitama">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;-webkit-tap-highlight-color:transparent}[hidden]{display:none!important}</style>
+<style>
+@font-face{font-family:'Shippori Mincho';font-style:normal;font-weight:400;font-display:swap;src:url(fonts/shippori-mincho-latin-400-normal.woff2) format('woff2')}
+@font-face{font-family:'Shippori Mincho';font-style:normal;font-weight:600;font-display:swap;src:url(fonts/shippori-mincho-latin-600-normal.woff2) format('woff2')}
+@font-face{font-family:'Shippori Mincho';font-style:normal;font-weight:800;font-display:swap;src:url(fonts/shippori-mincho-latin-800-normal.woff2) format('woff2')}
+@font-face{font-family:'Inter';font-style:normal;font-weight:400;font-display:swap;src:url(fonts/inter-latin-400-normal.woff2) format('woff2')}
+@font-face{font-family:'Inter';font-style:normal;font-weight:500;font-display:swap;src:url(fonts/inter-latin-500-normal.woff2) format('woff2')}
+@font-face{font-family:'Inter';font-style:normal;font-weight:600;font-display:swap;src:url(fonts/inter-latin-600-normal.woff2) format('woff2')}
+@font-face{font-family:'Inter';font-style:normal;font-weight:700;font-display:swap;src:url(fonts/inter-latin-700-normal.woff2) format('woff2')}
+</style>
+<title>Onitama</title>
+<link rel="icon" type="image/png" sizes="32x32" href="icon-32.png">
+<style>
+/* ===== Tokens =====
+   Layout: header (title + turn banner) > opponent hand > 5x5 board (temple arches top/bottom) > own hand > footer actions.
+   Theme: sumi ink / washi paper, vermillion vs indigo as the two houses, gold for selection & accents. */
+:root{
+  --bg:#f3ece0; --bg2:#e9ddc8; --panel:#fbf7ee;
+  --fg:#241f18; --fg-muted:#6b6155;
+  --red:#b8452f; --red-2:#8f3322; --red-hi:#e0917a; --red-soft:#e7c9bd;
+  --blue:#2d3f5c; --blue-2:#1f2c40; --blue-hi:#7891b8; --blue-soft:#c7cfdb;
+  --gold:#9c7a2e; --gold-soft:#e8dcb8;
+  --line: rgba(36,31,24,0.16);
+  --board-a:#efe6d3; --board-b:#ddcda8; --temple:#d8c08a;
+  --shadow: 0 1px 2px rgba(36,31,24,.08), 0 6px 20px rgba(36,31,24,.10);
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#15120e; --bg2:#1d1811; --panel:#211c15;
+    --fg:#ece3d2; --fg-muted:#a89a84;
+    --red:#d8664a; --red-2:#c0472e; --red-hi:#f0ab96; --red-soft:#4a2c24;
+    --blue:#7e9bd0; --blue-2:#5a74a3; --blue-hi:#b7c6e6; --blue-soft:#283348;
+    --gold:#d4b05a; --gold-soft:#3a3222;
+    --line: rgba(236,227,210,0.14);
+    --board-a:#2b251b; --board-b:#201b14; --temple:#4a3c22;
+    --shadow: 0 1px 2px rgba(0,0,0,.4), 0 10px 26px rgba(0,0,0,.45);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#15120e; --bg2:#1d1811; --panel:#211c15;
+  --fg:#ece3d2; --fg-muted:#a89a84;
+  --red:#d8664a; --red-2:#c0472e; --red-hi:#f0ab96; --red-soft:#4a2c24;
+  --blue:#7e9bd0; --blue-2:#5a74a3; --blue-hi:#b7c6e6; --blue-soft:#283348;
+  --gold:#d4b05a; --gold-soft:#3a3222;
+  --line: rgba(236,227,210,0.14);
+  --board-a:#2b251b; --board-b:#201b14; --temple:#4a3c22;
+  --shadow: 0 1px 2px rgba(0,0,0,.4), 0 10px 26px rgba(0,0,0,.45);
+  color-scheme: dark;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0; background:var(--bg); color:var(--fg);
+  font-family:'Inter',system-ui,sans-serif;
+  padding-left:max(16px, env(safe-area-inset-left,0px));
+  padding-right:max(16px, env(safe-area-inset-right,0px));
+  padding-bottom:18px;
+  -webkit-tap-highlight-color: transparent;
+}
+h1,h2,.serif{font-family:'Shippori Mincho',serif}
+.wrap{max-width:460px; margin:0 auto; display:flex; flex-direction:column; gap:12px}
+
+/* header */
+header{padding-top:14px; display:flex; flex-direction:column; gap:2px}
+.titlebar{display:flex; align-items:baseline; justify-content:space-between; gap:8px}
+h1{margin:0; font-size:26px; font-weight:800; letter-spacing:.02em}
+.subtitle{margin:0; font-size:12px; color:var(--fg-muted)}
+.modes{display:flex; gap:6px; background:var(--bg2); padding:4px; border-radius:10px}
+.modebtn{border:none; background:transparent; color:var(--fg-muted); font:600 12px/1 'Inter',sans-serif; padding:7px 10px; border-radius:7px; cursor:pointer}
+.modebtn.active{background:var(--panel); color:var(--fg); box-shadow:var(--shadow)}
+
+/* turn banner */
+.banner{display:flex; align-items:center; justify-content:space-between; background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:10px 14px; box-shadow:var(--shadow)}
+.banner .who{display:flex; align-items:center; gap:8px; font-weight:700; font-size:14px}
+.dot{width:10px;height:10px;border-radius:50%}
+.dot.blue{background:var(--blue)} .dot.red{background:var(--red)}
+.banner .msg{font-size:12.5px; color:var(--fg-muted); flex:1; text-align:right}
+.banner.win{border-color:var(--gold); background:var(--gold-soft)}
+.timerbadge{flex:0 0 auto; min-width:30px; height:30px; padding:0 2px; border-radius:50%; background:var(--gold-soft); border:2px solid var(--gold); color:var(--fg); display:flex; align-items:center; justify-content:center; font:700 13px/1 'Inter',sans-serif; font-variant-numeric:tabular-nums}
+.timerbadge.urgent{background:var(--red-soft); border-color:var(--red); color:var(--red-2); animation:pulse .6s ease infinite}
+@keyframes pulse{0%,100%{transform:scale(1)} 50%{transform:scale(1.14)}}
+@media (prefers-reduced-motion: reduce){ .timerbadge.urgent{animation:none} }
+
+/* hands */
+.hand{display:flex; gap:8px; justify-content:center}
+.hand.dim{opacity:.55}
+.card{
+  flex:1; max-width:150px; background:var(--panel); border:1.5px solid var(--line); border-radius:12px;
+  padding:8px; display:flex; flex-direction:column; align-items:center; gap:6px; cursor:pointer;
+  box-shadow:var(--shadow); transition:transform .12s ease, border-color .12s ease;
+}
+.card:active{transform:scale(.97)}
+.card.selected{border-color:var(--gold); box-shadow:0 0 0 2px var(--gold)}
+.card.disabled{opacity:.4; cursor:default}
+.card .cname{font-family:'Shippori Mincho',serif; font-weight:600; font-size:13px}
+.card .ccat{font-size:9.5px; color:var(--fg-muted); margin-top:-4px}
+.cardgrid{display:grid; grid-template-columns:repeat(5,1fr); gap:2px; width:62px; height:62px}
+.cardgrid .c{border-radius:2px; background:var(--line)}
+.cardgrid .c.self{background:var(--fg-muted); border-radius:50%}
+.cardgrid .c.mv.blueowner{background:var(--blue)}
+.cardgrid .c.mv.redowner{background:var(--red)}
+
+.spare-row{display:flex; align-items:center; justify-content:center; gap:8px; font-size:11px; color:var(--fg-muted)}
+.spare-row .card{max-width:96px; cursor:default}
+.spare-row .cardgrid{width:46px; height:46px}
+.spare-label{text-transform:uppercase; letter-spacing:.08em; font-size:10px}
+
+/* board */
+.boardwrap{display:flex; flex-direction:column; align-items:center; gap:0}
+.temple-label{font-size:10px; letter-spacing:.1em; text-transform:uppercase; color:var(--fg-muted); padding:3px 0}
+.board{
+  width:min(92vw,400px); aspect-ratio:1; display:grid; grid-template-columns:repeat(5,1fr); grid-template-rows:repeat(5,1fr);
+  border:2px solid var(--line); border-radius:10px; overflow:hidden; box-shadow:var(--shadow);
+}
+.cell{position:relative; display:flex; align-items:center; justify-content:center}
+.cell.a{background:var(--board-a)} .cell.b{background:var(--board-b)}
+.cell.temple-red{background:var(--temple)} .cell.temple-blue{background:var(--temple)}
+.cell .torii{position:absolute; inset:0; opacity:.55; pointer-events:none}
+.cell.legal::after{content:""; position:absolute; width:26%; height:26%; border-radius:50%; background:var(--gold); opacity:.55}
+.cell.legal.occupied::after{width:0;height:0}
+.cell.legal.occupied::before{content:""; position:absolute; inset:8%; border:3px solid var(--gold); border-radius:6px}
+.cell.lastmove{box-shadow: inset 0 0 0 3px var(--gold-soft)}
+.capture-burst{position:absolute; inset:0; margin:auto; width:70%; height:70%; border-radius:50%; background:radial-gradient(circle, var(--gold) 0%, rgba(156,122,46,0) 70%); animation:burst .42s ease-out forwards; pointer-events:none; z-index:5}
+@keyframes burst{0%{opacity:.9; transform:scale(.3)} 100%{opacity:0; transform:scale(1.7)}}
+@media (prefers-reduced-motion: reduce){ .capture-burst{display:none} }
+
+.piece-shadow{position:absolute; left:50%; bottom:7%; width:56%; height:15%; transform:translateX(-50%); border-radius:50%; background:radial-gradient(ellipse at center, rgba(0,0,0,.42), rgba(0,0,0,0) 72%); filter:blur(.5px); z-index:0; pointer-events:none}
+.piece-shadow.master{width:64%; height:17%; bottom:5%}
+.piece{
+  width:74%; height:74%; border-radius:50%; position:relative; z-index:1;
+  display:flex; align-items:center; justify-content:center;
+  font-family:'Shippori Mincho',serif; font-weight:700; cursor:pointer; user-select:none;
+  transition:transform .1s ease;
+  box-shadow:
+    inset 0 -5px 7px rgba(0,0,0,.4),
+    inset 0 3px 4px rgba(255,255,255,.3),
+    0 3px 5px rgba(0,0,0,.35);
+}
+.piece:active{transform:scale(.93) translateY(1px)}
+.piece.blue{background:radial-gradient(circle at 33% 26%, var(--blue-hi), var(--blue) 52%, var(--blue-2) 100%); color:#fff}
+.piece.red{background:radial-gradient(circle at 33% 26%, var(--red-hi), var(--red) 52%, var(--red-2) 100%); color:#fff}
+.piece.master{
+  width:85%; height:85%; font-size:17px;
+  box-shadow:
+    inset 0 -5px 7px rgba(0,0,0,.4),
+    inset 0 3px 4px rgba(255,255,255,.32),
+    0 0 0 2px var(--gold),
+    0 4px 7px rgba(0,0,0,.4);
+}
+.piece.student{font-size:13px}
+.piece.selected{outline:3px solid var(--gold); outline-offset:2px}
+.piece.disabled-piece{cursor:default}
+
+/* footer */
+.actions{display:flex; gap:8px; justify-content:center; margin-top:4px}
+.btn{font:600 13px/1 'Inter',sans-serif; padding:10px 16px; border-radius:10px; border:1.5px solid var(--line); background:var(--panel); color:var(--fg); cursor:pointer}
+.btn:active{transform:scale(.97)}
+.btn.primary{background:var(--gold); border-color:var(--gold); color:#1b1712}
+.rules{background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:2px 14px; box-shadow:var(--shadow)}
+.rules summary{cursor:pointer; padding:10px 0; font-weight:700; font-size:13px; list-style:none}
+.rules summary::-webkit-details-marker{display:none}
+.rules ul{margin:0 0 12px; padding-left:18px; font-size:12.5px; color:var(--fg-muted); line-height:1.55}
+.rules li{margin-bottom:4px}
+footer{text-align:center; font-size:10.5px; color:var(--fg-muted); padding:6px 0 2px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="titlebar">
+      <h1>Onitama</h1>
+      <div class="modes">
+        <button class="modebtn" id="modeHot">2 jugadors</button>
+        <button class="modebtn" id="modeCpu">Contra la CPU</button>
+      </div>
+    </div>
+    <p class="subtitle">Porta el mestre al temple rival, o captura'l primer.</p>
+  </header>
+
+  <div class="banner" id="banner">
+    <div class="who"><span class="dot" id="turnDot"></span><span id="turnText">—</span></div>
+    <div class="msg" id="turnMsg">Tria una carta</div>
+    <div class="timerbadge" id="timerBadge" hidden></div>
+  </div>
+
+  <div class="hand" id="handTop"></div>
+
+  <div class="boardwrap">
+    <div class="board" id="board"></div>
+  </div>
+
+  <div class="hand" id="handBottom"></div>
+
+  <div class="spare-row">
+    <span class="spare-label">Carta central</span>
+    <div class="card" id="spareCard"></div>
+  </div>
+
+  <div class="actions">
+    <button class="btn" id="newGameBtn">Nova partida</button>
+    <button class="btn" id="soundBtn">So: activat</button>
+    <button class="btn" id="timerBtn">Temps: activat</button>
+  </div>
+
+  <details class="rules">
+    <summary>Com es juga</summary>
+    <ul>
+      <li>Cada jugador té un mestre i quatre estudiants. Guanyes capturant el mestre rival o portant el teu mestre al temple contrari (la casella daurada de l'altre costat).</li>
+      <li>Al teu torn tries una de les teves dues cartes: marca com es pot moure qualsevol de les teves peces aquest torn.</li>
+      <li>Mous una peça seguint exactament un dels patrons de la carta. Les peces no bloquegen el salt: només compta la casella final, buida o amb una peça rival (que quedarà capturada).</li>
+      <li>La carta usada passa al centre i reculls la que hi havia. Per a l'altre jugador, el "davant" de les cartes és el costat contrari.</li>
+      <li>Si cap de les teves cartes et permet cap moviment, has de descartar-ne una igualment sense moure's.</li>
+      <li>El botó "Temps" activa un compte enrere de 15 segons per torn (cercle daurat). Si s'esgota, es juga un moviment a l'atzar. Es pot desactivar en qualsevol moment.</li>
+    </ul>
+  </details>
+
+  <footer>Onitama — Shimpei Sato / Arcane Wonders. Versió digital per jugar al mòbil.</footer>
+</div>
+
+<script>
+(function(){
+"use strict";
+
+/* ---------- Card definitions ----------
+   Each move is [dx,dy] from the piece's own square, defined for the
+   player sitting at the BOTTOM of the board (forward = toward row 0,
+   i.e. dy negative). For the player at the TOP, every move is rotated
+   180 degrees: (dx,dy) -> (-dx,-dy). */
+const CARDS = {
+  tiger:    {name:"Tiger",    cat:"Tigre",     moves:[[0,-2],[0,1]]},
+  dragon:   {name:"Dragon",   cat:"Drac",      moves:[[-2,-1],[2,-1],[-1,1],[1,1]]},
+  frog:     {name:"Frog",     cat:"Granota",   moves:[[-2,0],[-1,-1],[1,1]]},
+  rabbit:   {name:"Rabbit",   cat:"Conill",    moves:[[2,0],[1,-1],[-1,1]]},
+  crab:     {name:"Crab",     cat:"Cranc",     moves:[[0,-1],[-2,0],[2,0]]},
+  elephant: {name:"Elephant", cat:"Elefant",   moves:[[-1,-1],[1,-1],[-1,0],[1,0]]},
+  goose:    {name:"Goose",    cat:"Oca",       moves:[[-1,-1],[-1,0],[1,0],[1,1]]},
+  rooster:  {name:"Rooster",  cat:"Gall",      moves:[[1,-1],[-1,0],[1,0],[-1,1]]},
+  monkey:   {name:"Monkey",   cat:"Mico",      moves:[[-1,-1],[1,-1],[-1,1],[1,1]]},
+  mantis:   {name:"Mantis",   cat:"Pregadéu",  moves:[[-1,-1],[1,-1],[0,1]]},
+  horse:    {name:"Horse",    cat:"Cavall",    moves:[[0,-1],[-1,0],[0,1]]},
+  ox:       {name:"Ox",       cat:"Bou",       moves:[[0,-1],[1,0],[0,1]]},
+  crane:    {name:"Crane",    cat:"Grua",      moves:[[0,-1],[-1,1],[1,1]]},
+  boar:     {name:"Boar",     cat:"Senglar",   moves:[[0,-1],[-1,0],[1,0]]},
+  eel:      {name:"Eel",      cat:"Anguila",   moves:[[-1,-1],[-1,1],[1,0]]},
+  cobra:    {name:"Cobra",    cat:"Cobra",     moves:[[1,-1],[1,1],[-1,0]]},
+};
+const CARD_KEYS = Object.keys(CARDS);
+
+const TEMPLE = { blue:{x:2,y:4}, red:{x:2,y:0} };
+
+function effMoves(cardKey, owner){
+  const mv = CARDS[cardKey].moves;
+  return owner==='red' ? mv.map(([dx,dy])=>[-dx,-dy]) : mv.map(m=>m.slice());
+}
+
+/* ---------- Sound (synthesized, no audio files needed) ---------- */
+let audioCtx = null;
+let soundOn = true;
+try{ const sv = localStorage.getItem('onitama_sound'); if(sv!=null) soundOn = sv==='1'; }catch(e){}
+
+function ensureAudio(){
+  if(!audioCtx){
+    try{ audioCtx = new (window.AudioContext||window.webkitAudioContext)(); }catch(e){ audioCtx=null; }
+  }
+  if(audioCtx && audioCtx.state==='suspended'){ audioCtx.resume().catch(()=>{}); }
+}
+
+function tone(t0, freq, start, dur, type, gainVal){
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  osc.type = type || 'sine';
+  osc.frequency.value = freq;
+  gain.gain.setValueAtTime(0.0001, t0+start);
+  gain.gain.linearRampToValueAtTime(gainVal!=null?gainVal:0.12, t0+start+0.012);
+  gain.gain.exponentialRampToValueAtTime(0.0001, t0+start+dur);
+  osc.connect(gain); gain.connect(audioCtx.destination);
+  osc.start(t0+start); osc.stop(t0+start+dur+0.03);
+}
+
+function playSound(kind){
+  if(!soundOn) return;
+  ensureAudio();
+  if(!audioCtx) return;
+  const t0 = audioCtx.currentTime;
+  switch(kind){
+    case 'select': tone(t0, 700, 0, 0.05, 'sine', 0.06); break;
+    case 'move': tone(t0, 520, 0, 0.09, 'sine', 0.10); break;
+    case 'capture': tone(t0, 180, 0, 0.14, 'square', 0.14); tone(t0, 90, 0.03, 0.12, 'triangle', 0.10); break;
+    case 'pass': tone(t0, 300, 0, 0.12, 'sine', 0.08); break;
+    case 'tick': tone(t0, 880, 0, 0.05, 'square', 0.045); break;
+    case 'win': tone(t0, 523.25, 0, 0.14, 'sine', 0.12); tone(t0, 659.25, 0.13, 0.14, 'sine', 0.12); tone(t0, 783.99, 0.26, 0.24, 'sine', 0.14); break;
+  }
+}
+
+/* ---------- Game state ---------- */
+let state = null;
+let mode = 'hotseat'; // 'hotseat' | 'cpu' (human = blue, CPU = red)
+let ui = { selectedCard:null, selectedPieceId:null, mustPass:false, lastMove:null, aiThinking:false };
+const TURN_SECONDS = 15;
+let turnTimerInterval = null;
+let turnSecondsLeft = 0;
+let timerOn = true;
+try{ const tv = localStorage.getItem('onitama_timer'); if(tv!=null) timerOn = tv==='1'; }catch(e){}
+
+function shuffledDeck(){
+  const d = CARD_KEYS.slice();
+  for(let i=d.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [d[i],d[j]]=[d[j],d[i]]; }
+  return d;
+}
+
+function newGame(){
+  const deck = shuffledDeck();
+  const pieces = [];
+  let id=0;
+  [0,1,3,4].forEach(x=>pieces.push({id:id++, owner:'blue', type:'student', x, y:4, alive:true}));
+  pieces.push({id:id++, owner:'blue', type:'master', x:2, y:4, alive:true});
+  [0,1,3,4].forEach(x=>pieces.push({id:id++, owner:'red', type:'student', x, y:0, alive:true}));
+  pieces.push({id:id++, owner:'red', type:'master', x:2, y:0, alive:true});
+
+  state = {
+    pieces,
+    hands: { blue:[deck[0],deck[1]], red:[deck[2],deck[3]] },
+    spare: deck[4],
+    turn: Math.random()<0.5 ? 'blue' : 'red',
+    gameOver:false, winner:null, winReason:null
+  };
+  ui = { selectedCard:null, selectedPieceId:null, mustPass:false, lastMove:null, aiThinking:false };
+  save();
+  checkMustPass();
+  syncTurnTimer();
+  maybeAiTurn();
+}
+
+/* ---------- Move generation ---------- */
+function occupantAt(pcs, x, y){
+  return pcs.find(p=>p.alive && p.x===x && p.y===y) || null;
+}
+
+function generateMoves(st, color){
+  const moves = [];
+  const own = st.pieces.filter(p=>p.alive && p.owner===color);
+  st.hands[color].forEach(cardKey=>{
+    const em = effMoves(cardKey, color);
+    own.forEach(piece=>{
+      em.forEach(([dx,dy])=>{
+        const nx = piece.x+dx, ny = piece.y+dy;
+        if(nx<0||nx>4||ny<0||ny>4) return;
+        const occ = occupantAt(st.pieces, nx, ny);
+        if(occ && occ.owner===color) return;
+        const oppTemple = TEMPLE[color==='blue'?'red':'blue'];
+        const isWinStream = piece.type==='master' && nx===oppTemple.x && ny===oppTemple.y;
+        const isWinStone = !!(occ && occ.type==='master' && occ.owner!==color);
+        moves.push({cardKey, pieceId:piece.id, from:{x:piece.x,y:piece.y}, to:{x:nx,y:ny}, captureId: occ?occ.id:null, isWinStream, isWinStone});
+      });
+    });
+  });
+  return moves;
+}
+
+function applyMove(st, move, color){
+  const s = JSON.parse(JSON.stringify(st));
+  const piece = s.pieces.find(p=>p.id===move.pieceId);
+  piece.x = move.to.x; piece.y = move.to.y;
+  if(move.captureId!=null){
+    const cap = s.pieces.find(p=>p.id===move.captureId);
+    cap.alive = false;
+  }
+  const hand = s.hands[color];
+  const idx = hand.indexOf(move.cardKey);
+  hand[idx] = s.spare;
+  s.spare = move.cardKey;
+  s.turn = color==='blue'?'red':'blue';
+  if(move.isWinStone || move.isWinStream){
+    s.gameOver = true; s.winner = color; s.winReason = move.isWinStone ? 'stone' : 'stream';
+  }
+  return s;
+}
+
+function applyPass(st, color, cardKey){
+  const s = JSON.parse(JSON.stringify(st));
+  const hand = s.hands[color];
+  const idx = hand.indexOf(cardKey);
+  hand[idx] = s.spare;
+  s.spare = cardKey;
+  s.turn = color==='blue'?'red':'blue';
+  return s;
+}
+
+/* ---------- AI ---------- */
+function evaluate(st, aiColor){
+  const opp = aiColor==='blue'?'red':'blue';
+  const aiMaster = st.pieces.find(p=>p.owner===aiColor&&p.type==='master'&&p.alive);
+  const oppMaster = st.pieces.find(p=>p.owner===opp&&p.type==='master'&&p.alive);
+  if(!oppMaster) return 100000;
+  if(!aiMaster) return -100000;
+  let score = 0;
+  const aiStudents = st.pieces.filter(p=>p.owner===aiColor&&p.type==='student'&&p.alive).length;
+  const oppStudents = st.pieces.filter(p=>p.owner===opp&&p.type==='student'&&p.alive).length;
+  score += (aiStudents - oppStudents) * 30;
+  const targetTemple = TEMPLE[aiColor==='blue'?'red':'blue'];
+  const dist = Math.abs(aiMaster.x-targetTemple.x) + Math.abs(aiMaster.y-targetTemple.y);
+  score += (8 - dist) * 2;
+  st.pieces.filter(p=>p.alive&&p.owner===aiColor).forEach(p=>{
+    score += (4 - (Math.abs(p.x-2)+Math.abs(p.y-2)));
+  });
+  score += (generateMoves(st, aiColor).length - generateMoves(st, opp).length) * 0.3;
+  return score;
+}
+
+function aiChooseMove(st, aiColor){
+  const opp = aiColor==='blue'?'red':'blue';
+  const myMoves = generateMoves(st, aiColor);
+  if(myMoves.length===0) return null;
+  let best = -Infinity, bestList = [];
+  for(const mv of myMoves){
+    if(mv.isWinStone || mv.isWinStream){ return mv; }
+    const s2 = applyMove(st, mv, aiColor);
+    const oppMoves = generateMoves(s2, opp);
+    let worst;
+    if(oppMoves.length===0){
+      worst = evaluate(s2, aiColor);
+    } else {
+      worst = Infinity;
+      let oppCanWin = false;
+      for(const omv of oppMoves){
+        if(omv.isWinStone || omv.isWinStream){ oppCanWin = true; break; }
+        const s3 = applyMove(s2, omv, opp);
+        const val = evaluate(s3, aiColor);
+        if(val < worst) worst = val;
+      }
+      if(oppCanWin) worst = -100000;
+    }
+    if(worst > best){ best = worst; bestList = [mv]; }
+    else if(worst === best){ bestList.push(mv); }
+  }
+  return bestList[Math.floor(Math.random()*bestList.length)];
+}
+
+function maybeAiTurn(){
+  if(mode!=='cpu' || state.gameOver || state.turn!=='red') return;
+  clearTurnTimerOnly();
+  ui.aiThinking = true; render();
+  setTimeout(()=>{
+    ui.aiThinking = false;
+    const moves = generateMoves(state, 'red');
+    if(moves.length===0){
+      performPass('red', state.hands.red[0]);
+    } else {
+      performMove(aiChooseMove(state, 'red'));
+    }
+  }, 550);
+}
+
+/* ---------- Persistence (per-viewer convenience only) ---------- */
+function save(){
+  try{ localStorage.setItem('onitama_state', JSON.stringify({state, mode})); }catch(e){}
+}
+function load(){
+  try{
+    const raw = localStorage.getItem('onitama_state');
+    if(!raw) return false;
+    const data = JSON.parse(raw);
+    if(!data || !data.state || !data.state.pieces) return false;
+    state = data.state; mode = data.mode || 'hotseat';
+    ui = { selectedCard:null, selectedPieceId:null, mustPass:false, lastMove:null, aiThinking:false };
+    return true;
+  }catch(e){ return false; }
+}
+
+/* ---------- Turn timer ---------- */
+function updateTimerUI(val){
+  const el = document.getElementById('timerBadge');
+  if(val==null){ el.hidden = true; return; }
+  el.hidden = false;
+  el.textContent = String(val);
+  el.classList.toggle('urgent', val<=5);
+}
+function clearTurnTimerOnly(){
+  if(turnTimerInterval){ clearInterval(turnTimerInterval); turnTimerInterval=null; }
+  updateTimerUI(null);
+}
+function syncTurnTimer(){
+  clearTurnTimerOnly();
+  if(!timerOn || state.gameOver) return;
+  const isHumanTurn = (mode==='hotseat') || (mode==='cpu' && state.turn==='blue');
+  if(!isHumanTurn) return;
+  turnSecondsLeft = TURN_SECONDS;
+  updateTimerUI(turnSecondsLeft);
+  turnTimerInterval = setInterval(()=>{
+    turnSecondsLeft--;
+    if(turnSecondsLeft<=5 && turnSecondsLeft>0) playSound('tick');
+    updateTimerUI(turnSecondsLeft);
+    if(turnSecondsLeft<=0){
+      clearInterval(turnTimerInterval); turnTimerInterval=null;
+      const color = state.turn;
+      const moves = generateMoves(state, color);
+      if(moves.length===0){ performPass(color, state.hands[color][0]); }
+      else { performMove(moves[Math.floor(Math.random()*moves.length)]); }
+    }
+  }, 1000);
+}
+
+/* ---------- Rendering ---------- */
+const boardEl = document.getElementById('board');
+const handTopEl = document.getElementById('handTop');
+const handBottomEl = document.getElementById('handBottom');
+const spareEl = document.getElementById('spareCard');
+const bannerEl = document.getElementById('banner');
+const turnTextEl = document.getElementById('turnText');
+const turnMsgEl = document.getElementById('turnMsg');
+const turnDotEl = document.getElementById('turnDot');
+const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+function playMoveFlip(move, fromRect){
+  if(reduceMotion || !fromRect) return;
+  const toEl = boardEl.querySelector('.piece[data-id="'+move.pieceId+'"]');
+  if(!toEl) return;
+  const toRect = toEl.getBoundingClientRect();
+  const dx = fromRect.left - toRect.left, dy = fromRect.top - toRect.top;
+  if(!dx && !dy) return;
+  toEl.style.transition = 'none';
+  toEl.style.transform = 'translate('+dx+'px,'+dy+'px)';
+  requestAnimationFrame(()=>{
+    toEl.style.transition = 'transform .22s cubic-bezier(.3,.8,.4,1)';
+    toEl.style.transform = 'translate(0,0)';
+  });
+}
+function playCaptureBurst(move){
+  if(reduceMotion || move.captureId==null) return;
+  const idx = move.to.y*5 + move.to.x;
+  const cell = boardEl.children[idx];
+  if(!cell) return;
+  const burst = document.createElement('div');
+  burst.className = 'capture-burst';
+  cell.appendChild(burst);
+  setTimeout(()=>burst.remove(), 450);
+}
+
+function performMove(move){
+  const color = state.turn;
+  const fromEl = boardEl.querySelector('.piece[data-id="'+move.pieceId+'"]');
+  const fromRect = fromEl ? fromEl.getBoundingClientRect() : null;
+  const captured = move.captureId!=null;
+  ui.lastMove = move;
+  state = applyMove(state, move, color);
+  ui.selectedCard=null; ui.selectedPieceId=null;
+  save();
+  render();
+  playMoveFlip(move, fromRect);
+  if(captured){ playCaptureBurst(move); playSound('capture'); } else { playSound('move'); }
+  if(state.gameOver) playSound('win');
+  checkMustPass();
+  syncTurnTimer();
+  maybeAiTurn();
+}
+
+function performPass(color, cardKey){
+  state = applyPass(state, color, cardKey);
+  ui.selectedCard=null; ui.selectedPieceId=null; ui.mustPass=false; ui.lastMove=null;
+  save();
+  playSound('pass');
+  checkMustPass();
+  syncTurnTimer();
+  maybeAiTurn();
+}
+
+function pieceGlyph(type){ return type==='master' ? '将' : '兵'; }
+
+function buildMiniGrid(cardKey, owner){
+  const grid = document.createElement('div');
+  grid.className = 'cardgrid';
+  const em = effMoves(cardKey, owner);
+  const set = new Set(em.map(([dx,dy])=> (dx+2)+','+(dy+2)));
+  for(let r=0;r<5;r++){
+    for(let c=0;c<5;c++){
+      const cell = document.createElement('div');
+      cell.className = 'c';
+      if(c===2 && r===2) cell.classList.add('self');
+      else if(set.has(c+','+r)) cell.classList.add('mv', owner+'owner');
+      grid.appendChild(cell);
+    }
+  }
+  return grid;
+}
+
+function buildCardEl(cardKey, owner, {clickable, selected, dim}){
+  const el = document.createElement('div');
+  el.className = 'card' + (selected?' selected':'') + (dim?' disabled':'');
+  const name = document.createElement('div'); name.className='cname'; name.textContent = CARDS[cardKey].cat;
+  const orig = document.createElement('div'); orig.className='ccat'; orig.textContent = CARDS[cardKey].name;
+  el.appendChild(name);
+  el.appendChild(buildMiniGrid(cardKey, owner));
+  el.appendChild(orig);
+  if(clickable){
+    el.addEventListener('click', ()=> onCardClick(cardKey));
+  }
+  return el;
+}
+
+function legalDestinationsFor(cardKey, pieceId){
+  if(!cardKey || pieceId==null) return [];
+  return generateMoves(state, state.turn).filter(m=>m.cardKey===cardKey && m.pieceId===pieceId);
+}
+
+function render(){
+  // header mode buttons
+  document.getElementById('modeHot').classList.toggle('active', mode==='hotseat');
+  document.getElementById('modeCpu').classList.toggle('active', mode==='cpu');
+
+  // banner
+  bannerEl.classList.toggle('win', state.gameOver);
+  turnDotEl.className = 'dot ' + state.turn;
+  if(state.gameOver){
+    const who = state.winner==='blue' ? 'Blau' : 'Vermell';
+    const how = state.winReason==='stone' ? 'ha capturat el mestre rival' : 'ha arribat al temple rival';
+    turnTextEl.textContent = who + ' guanya';
+    turnMsgEl.textContent = who + ' ' + how + '. Via de ' + (state.winReason==='stone'?'la Pedra':'el Rierol') + '.';
+  } else if(ui.aiThinking){
+    turnTextEl.textContent = 'CPU (Vermell)';
+    turnMsgEl.textContent = 'Pensant...';
+  } else {
+    turnTextEl.textContent = (state.turn==='blue'?'Blau':'Vermell') + (mode==='cpu' && state.turn==='red' ? ' (CPU)' : '');
+    if(ui.mustPass) turnMsgEl.textContent = 'Sense moviments possibles: tria una carta per passar';
+    else if(!ui.selectedCard) turnMsgEl.textContent = 'Tria una carta';
+    else if(ui.selectedPieceId==null) turnMsgEl.textContent = 'Tria una peça per moure';
+    else turnMsgEl.textContent = 'Tria on moure la peça';
+  }
+
+  // hands: bottom = blue (human), top = red (CPU or player 2)
+  const blueInteractive = !state.gameOver && state.turn==='blue' && !ui.aiThinking;
+  const redInteractive = !state.gameOver && state.turn==='red' && !(mode==='cpu') && !ui.aiThinking;
+
+  handBottomEl.innerHTML = '';
+  handBottomEl.classList.toggle('dim', state.turn!=='blue');
+  state.hands.blue.forEach(ck=>{
+    handBottomEl.appendChild(buildCardEl(ck, 'blue', {
+      clickable: blueInteractive,
+      selected: ui.selectedCard===ck && state.turn==='blue',
+      dim: !blueInteractive
+    }));
+  });
+
+  handTopEl.innerHTML = '';
+  handTopEl.classList.toggle('dim', state.turn!=='red');
+  state.hands.red.forEach(ck=>{
+    handTopEl.appendChild(buildCardEl(ck, 'red', {
+      clickable: redInteractive,
+      selected: ui.selectedCard===ck && state.turn==='red',
+      dim: !redInteractive
+    }));
+  });
+
+  // spare card: shown from the perspective of whoever is about to receive it visually neutral -> show as neutral (blue) grid but note label
+  spareEl.innerHTML = '';
+  spareEl.appendChild(buildMiniGridLabel(state.spare));
+
+  // board
+  boardEl.innerHTML = '';
+  const dests = legalDestinationsFor(ui.selectedCard, ui.selectedPieceId);
+  for(let y=0;y<5;y++){
+    for(let x=0;x<5;x++){
+      const cell = document.createElement('div');
+      const isTempleRed = (x===2&&y===0);
+      const isTempleBlue = (x===2&&y===4);
+      cell.className = 'cell ' + (((x+y)%2===0) ? 'a':'b');
+      if(isTempleRed) cell.classList.add('temple-red');
+      if(isTempleBlue) cell.classList.add('temple-blue');
+      if(isTempleRed||isTempleBlue) cell.appendChild(torii());
+      if(ui.lastMove && ((ui.lastMove.to.x===x&&ui.lastMove.to.y===y)||(ui.lastMove.from.x===x&&ui.lastMove.from.y===y))){
+        cell.classList.add('lastmove');
+      }
+      const dest = dests.find(d=>d.to.x===x&&d.to.y===y);
+      if(dest){
+        cell.classList.add('legal');
+        if(dest.captureId!=null) cell.classList.add('occupied');
+        cell.addEventListener('click', ()=> onDestinationClick(dest));
+      }
+      const occ = occupantAt(state.pieces, x, y);
+      if(occ){
+        const shadow = document.createElement('div');
+        shadow.className = 'piece-shadow' + (occ.type==='master' ? ' master' : '');
+        cell.appendChild(shadow);
+        const p = document.createElement('div');
+        p.className = 'piece ' + occ.owner + ' ' + occ.type;
+        p.dataset.id = String(occ.id);
+        if(ui.selectedPieceId===occ.id) p.classList.add('selected');
+        p.textContent = pieceGlyph(occ.type);
+        const canSelect = !state.gameOver && !ui.aiThinking && occ.owner===state.turn &&
+          (mode==='hotseat' || occ.owner==='blue');
+        if(canSelect) p.addEventListener('click', (e)=>{ e.stopPropagation(); onPieceClick(occ); });
+        else p.classList.add('disabled-piece');
+        cell.appendChild(p);
+      }
+      boardEl.appendChild(cell);
+    }
+  }
+}
+
+function buildMiniGridLabel(cardKey){
+  const wrap = document.createElement('div');
+  const name = document.createElement('div'); name.className='cname'; name.textContent = CARDS[cardKey].cat;
+  const orig = document.createElement('div'); orig.className='ccat'; orig.textContent = CARDS[cardKey].name;
+  wrap.appendChild(name);
+  wrap.appendChild(buildMiniGrid(cardKey, 'blue'));
+  wrap.appendChild(orig);
+  return wrap;
+}
+
+function torii(){
+  const svg = document.createElementNS('http://www.w3.org/2000/svg','svg');
+  svg.setAttribute('viewBox','0 0 100 100');
+  svg.classList.add('torii');
+  svg.innerHTML = '<g fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round" opacity="0.4" style="color:var(--fg)">' +
+    '<line x1="22" y1="30" x2="22" y2="78"/>' +
+    '<line x1="78" y1="30" x2="78" y2="78"/>' +
+    '<line x1="12" y1="24" x2="88" y2="24"/>' +
+    '<line x1="18" y1="36" x2="82" y2="36"/>' +
+    '</g>';
+  return svg;
+}
+
+/* ---------- Interaction ---------- */
+function onCardClick(cardKey){
+  if(ui.mustPass){
+    performPass(state.turn, cardKey);
+    return;
+  }
+  playSound('select');
+  ui.selectedCard = (ui.selectedCard===cardKey) ? null : cardKey;
+  ui.selectedPieceId = null;
+  render();
+}
+
+function onPieceClick(piece){
+  if(!ui.selectedCard) return;
+  if(piece.owner!==state.turn) return;
+  playSound('select');
+  ui.selectedPieceId = (ui.selectedPieceId===piece.id) ? null : piece.id;
+  render();
+}
+
+function onDestinationClick(move){
+  performMove(move);
+}
+
+function checkMustPass(){
+  if(!state.gameOver){
+    const moves = generateMoves(state, state.turn);
+    ui.mustPass = moves.length===0;
+  }
+  render();
+}
+
+document.getElementById('newGameBtn').addEventListener('click', newGame);
+document.getElementById('modeHot').addEventListener('click', ()=>{ if(mode!=='hotseat'){ mode='hotseat'; newGame(); } });
+document.getElementById('modeCpu').addEventListener('click', ()=>{ if(mode!=='cpu'){ mode='cpu'; newGame(); } });
+document.getElementById('soundBtn').addEventListener('click', ()=>{
+  soundOn = !soundOn;
+  try{ localStorage.setItem('onitama_sound', soundOn?'1':'0'); }catch(e){}
+  document.getElementById('soundBtn').textContent = 'So: ' + (soundOn?'activat':'desactivat');
+  if(soundOn){ ensureAudio(); playSound('select'); }
+});
+document.getElementById('soundBtn').textContent = 'So: ' + (soundOn?'activat':'desactivat');
+
+document.getElementById('timerBtn').addEventListener('click', ()=>{
+  timerOn = !timerOn;
+  try{ localStorage.setItem('onitama_timer', timerOn?'1':'0'); }catch(e){}
+  document.getElementById('timerBtn').textContent = 'Temps: ' + (timerOn?'activat':'desactivat');
+  syncTurnTimer();
+});
+document.getElementById('timerBtn').textContent = 'Temps: ' + (timerOn?'activat':'desactivat');
+
+/* ---------- Boot ---------- */
+function start(){
+  if(!load()) newGame();
+  else { render(); checkMustPass(); syncTurnTimer(); maybeAiTurn(); }
+}
+if(window.claude && window.claude.hot){
+  window.claude.hot.ready ? window.claude.hot.ready(start) : start();
+} else {
+  start();
+}
+})();
+</script>
+<script>if('serviceWorker' in navigator){addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));}</script>
+</body>
+</html>

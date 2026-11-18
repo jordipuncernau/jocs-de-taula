@@ -1,0 +1,1376 @@
+<!doctype html>
+<html lang="ca">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#2f6b4f">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Cubirds">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;-webkit-tap-highlight-color:transparent}[hidden]{display:none!important}</style>
+<title>Cubirds</title>
+<style>
+:root{
+  --bg:#f3f0e8; --panel:#ffffff; --ink:#2b2420; --muted:#8a7f72;
+  --accent:#2f6b4f; --accent-ink:#ffffff; --border:#e2dbcc;
+  --row-bg:#eae3d2; --danger:#b5452f; --warn:#c08a2e;
+  --shadow: 0 2px 10px rgba(43,36,32,.08);
+  --radius:14px;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#1b1812; --panel:#262119; --ink:#efe7da; --muted:#a79a86;
+    --accent:#6fbb90; --accent-ink:#13261c; --border:#3a3226;
+    --row-bg:#2f2a20; --danger:#e07a63; --warn:#e3b35c;
+    --shadow: 0 2px 14px rgba(0,0,0,.4);
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#1b1812; --panel:#262119; --ink:#efe7da; --muted:#a79a86;
+  --accent:#6fbb90; --accent-ink:#13261c; --border:#3a3226;
+  --row-bg:#2f2a20; --danger:#e07a63; --warn:#e3b35c;
+  --shadow: 0 2px 14px rgba(0,0,0,.4);
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{
+  background:var(--bg); color:var(--ink);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  min-height:100vh;
+}
+#app{max-width:980px;margin:0 auto;padding:14px 14px 90px;}
+h1,h2,h3{margin:.2em 0 .5em; font-weight:700;}
+button{
+  font-family:inherit; font-size:15px; border:none; border-radius:10px;
+  padding:10px 16px; cursor:pointer; background:var(--accent); color:var(--accent-ink);
+  font-weight:600; transition:transform .08s, opacity .15s;
+}
+button:disabled{opacity:.4; cursor:not-allowed;}
+button:active:not(:disabled){transform:scale(.97);}
+button.secondary{background:var(--panel); color:var(--ink); border:1px solid var(--border);}
+button.danger{background:var(--danger); color:#fff;}
+input[type=text]{
+  font-family:inherit; font-size:16px; padding:10px 12px; border-radius:10px;
+  border:1px solid var(--border); background:var(--panel); color:var(--ink); width:100%;
+}
+.card-panel{background:var(--panel); border-radius:var(--radius); box-shadow:var(--shadow); padding:16px; margin-bottom:14px; border:1px solid var(--border);}
+.row{display:flex; gap:8px; align-items:center;}
+.center{text-align:center;}
+.muted{color:var(--muted); font-size:13.5px;}
+.small{font-size:13px;}
+.hidden{display:none !important;}
+.topbar{display:flex; justify-content:space-between; align-items:center; gap:10px; margin-bottom:10px; flex-wrap:wrap;}
+.brand{display:flex; align-items:center; gap:8px; font-weight:800; font-size:20px;}
+.code-chip{
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing:.14em;
+  background:var(--row-bg); border:1px dashed var(--border); border-radius:10px;
+  padding:6px 12px; font-size:16px; font-weight:700; cursor:pointer;
+}
+.players-strip{display:flex; gap:14px; flex-wrap:wrap; margin:10px 0;}
+.player-chip{
+  background:var(--panel); border:1px solid var(--border); border-radius:18px;
+  padding:16px 20px; display:flex; flex-direction:column; gap:12px; min-width:260px;
+  box-shadow:var(--shadow);
+}
+.player-chip.is-turn{border-color:var(--accent); box-shadow:0 0 0 3px var(--accent) inset;}
+.player-chip .pname{font-weight:700; font-size:18px; display:flex; justify-content:space-between; align-items:center; gap:8px;}
+.collection-row{display:flex; gap:10px; flex-wrap:wrap; align-items:center;}
+.collection-count{font-weight:800; font-size:24px; color:var(--accent); line-height:1; margin-right:2px;}
+.mini-bird{width:30px; height:30px; border-radius:6px; display:flex; align-items:center; justify-content:center; background:var(--row-bg); overflow:hidden;}
+.mini-bird svg{width:16px;height:16px;}
+.collection-species{position:relative; display:flex; align-items:center;}
+.player-chip .collection-row .mini-bird{width:58px; height:58px; border-radius:10px;}
+.stats-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:12px;}
+.stat-tile{background:var(--row-bg); border:1px solid var(--border); border-radius:14px; padding:14px 10px; text-align:center;}
+.stat-num{font-weight:800; font-size:30px; color:var(--accent); line-height:1;}
+.stat-lbl{font-size:12.5px; color:var(--muted); margin-top:6px;}
+.collection-species-count{
+  position:absolute; bottom:-6px; right:-6px; background:var(--accent); color:#fff;
+  font-weight:800; font-size:13px; min-width:22px; height:22px; border-radius:11px;
+  display:flex; align-items:center; justify-content:center; padding:0 5px;
+  box-shadow:0 1px 3px rgba(0,0,0,.35); border:2px solid var(--panel);
+}
+.table-rows{display:flex; flex-direction:column; gap:8px; margin:12px 0;}
+.table-row{
+  background:var(--row-bg); border-radius:12px; padding:8px; display:flex; align-items:center; gap:6px;
+  min-height:120px; border:1px solid var(--border);
+}
+.row-cards{display:flex; gap:4px; flex:1; overflow-x:auto; padding:2px;}
+.bird-card{
+  flex:0 0 auto; width:78px; height:112px; background:transparent; border-radius:8px;
+  border:none; display:flex; flex-direction:column; align-items:center;
+  justify-content:center; box-shadow:0 1px 4px rgba(0,0,0,.18); position:relative; overflow:hidden;
+}
+.bird-card svg{width:30px;height:30px;}
+.bird-card img{width:100%;height:100%;object-fit:contain;background:#eee6d6;}
+.mini-bird img{width:100%;height:100%;object-fit:contain;}
+.img-fallback{
+  width:100%; height:100%; display:flex; align-items:center; justify-content:center;
+  background:#eee6d6; color:#2b2420; font-weight:800; font-size:14px; border-radius:inherit;
+}
+.species-pill img{width:34px;height:34px;object-fit:contain;}
+.legend-table img{width:30px;height:30px;object-fit:contain;vertical-align:middle;}
+.bird-card .nums{position:absolute; bottom:2px; left:3px; right:3px; display:flex; justify-content:space-between; font-size:8px; font-weight:700; color:var(--muted);}
+.row-side-btn{flex:0 0 auto; width:34px; height:56px; font-size:13px; padding:0;}
+.hand-section{margin-top:14px;}
+.hand-species-list{display:flex; gap:14px; flex-wrap:wrap; margin:10px 0;}
+.species-pill{
+  background:var(--panel); border:1.5px solid var(--border); border-radius:14px;
+  padding:8px 12px; display:flex; align-items:center; gap:8px; cursor:pointer;
+  box-shadow:var(--shadow); font-weight:700;
+}
+.species-pill.selected{border-color:var(--accent); background:color-mix(in srgb, var(--accent) 15%, var(--panel));}
+.species-pill svg{width:26px;height:26px;}
+.species-pill .cnt{background:var(--accent); color:var(--accent-ink); border-radius:50%; width:22px; height:22px; display:flex; align-items:center; justify-content:center; font-size:12px;}
+.hand-card{cursor:pointer; flex:0 0 auto; padding-top:4px; display:flex; flex-direction:column; align-items:center; gap:6px;}
+.hand-card .bird-card{width:84px; height:120px; border-radius:9px; box-shadow:var(--shadow); transition:transform .1s, box-shadow .15s;}
+.hand-card:active .bird-card{transform:scale(.96);}
+.hand-card.selected .bird-card{outline:3px solid var(--accent); outline-offset:2px;}
+/* El comptador queda SOTA la carta, mai a sobre: la carta ja porta imprès el
+   seu propi número d'espècie i no el volem tapar. */
+.cnt-badge{
+  background:var(--accent); color:var(--accent-ink);
+  border-radius:10px; padding:3px 10px; display:flex; align-items:center; justify-content:center;
+  font-weight:800; font-size:15px; box-shadow:0 1px 4px rgba(0,0,0,.25);
+}
+.actions-bar{display:flex; gap:8px; flex-wrap:wrap; margin-top:10px;}
+.log-box{max-height:120px; overflow-y:auto; font-size:13px; color:var(--muted); display:flex; flex-direction:column; gap:3px;}
+.toast{
+  position:fixed; bottom:16px; left:50%; transform:translateX(-50%); background:var(--ink); color:var(--bg);
+  padding:10px 18px; border-radius:10px; font-size:14px; opacity:0; pointer-events:none; transition:opacity .25s;
+  z-index:50; max-width:90%; text-align:center;
+}
+.toast.show{opacity:1;}
+.winner-banner{
+  background:linear-gradient(135deg, var(--accent), #1f7a52); color:#fff; border-radius:16px;
+  padding:22px; text-align:center; font-size:20px; font-weight:800; margin-bottom:14px;
+}
+.legend-table{width:100%; border-collapse:collapse; font-size:13px; margin-top:8px;}
+.legend-table td,.legend-table th{padding:4px 6px; border-bottom:1px solid var(--border); text-align:left;}
+.flex-wrap{display:flex;flex-wrap:wrap;gap:8px;}
+.step-tag{display:inline-block; background:var(--row-bg); border-radius:8px; padding:3px 10px; font-size:12.5px; font-weight:700; margin-bottom:8px;}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div id="toast" class="toast"></div>
+
+<script>
+/* ============== DADES DEL JOC ============== */
+const SPECIES = {
+  flamenc:  { name:"Flamenc",  count:7,  small:2, big:3, c1:"#f472b6", c2:"#db2777" },
+  mussol:   { name:"Mussol",   count:10, small:3, big:4, c1:"#b08d57", c2:"#7c5e35" },
+  tuca:     { name:"Tucà",     count:10, small:3, big:4, c1:"#1f2937", c2:"#f59e0b" },
+  anec:     { name:"Ànec",     count:13, small:4, big:6, c1:"#0ea5e9", c2:"#0369a1" },
+  lloro:    { name:"Lloro",    count:13, small:4, big:6, c1:"#22c55e", c2:"#15803d" },
+  garsa:    { name:"Garsa",    count:17, small:5, big:7, c1:"#111827", c2:"#e5e7eb" },
+  boscarla: { name:"Boscarla", count:20, small:6, big:9, c1:"#a3a86b", c2:"#78716c" },
+  pitroig:  { name:"Pit-roig", count:20, small:6, big:9, c1:"#92400e", c2:"#ea580c" },
+};
+const SPECIES_KEYS = Object.keys(SPECIES);
+const BIRD_IMG = {
+  flamenc:  "birds/flamenc.jpg",
+  mussol:   "birds/mussol.jpg",
+  tuca:     "birds/tuca.jpg",
+  anec:     "birds/anec.jpg",
+  lloro:    "birds/lloro.jpg",
+  garsa:    "birds/garsa.jpg",
+  boscarla: "birds/boscarla.jpg",
+  pitroig:  "birds/pitroig.jpg",
+};
+function birdImg(key){
+  const s = SPECIES[key];
+  return `<img src="${BIRD_IMG[key]}" alt="${esc(s?s.name:key)}" data-sp="${key}" loading="lazy">`;
+}
+
+// Si no hi ha connexió i la imatge d'una carta no es pot carregar, no deixem
+// una icona trencada: la substituïm per un bloc amb les inicials de l'espècie,
+// perquè es pugui seguir jugant (contra la màquina / passa-i-juga) sense internet.
+document.addEventListener("error", function(e){
+  const img = e.target;
+  if(img && img.tagName==="IMG" && img.dataset && img.dataset.sp){
+    const s = SPECIES[img.dataset.sp];
+    const name = s ? s.name : img.dataset.sp;
+    const div = document.createElement("div");
+    div.className = "img-fallback";
+    div.title = name;
+    div.textContent = name.slice(0,2).toUpperCase();
+    if(img.parentNode) img.parentNode.replaceChild(div, img);
+  }
+}, true);
+
+function birdSVG(key){
+  const s = SPECIES[key];
+  if(!s) return "";
+  switch(key){
+    case "flamenc": return `<svg viewBox="0 0 100 100"><path d="M60 20 C40 25,38 45,48 55 L40 90 L50 90 L55 60 L62 60 L68 90 L78 90 L68 50 C80 42,78 24,60 20 Z" fill="${s.c1}"/><circle cx="60" cy="24" r="10" fill="${s.c1}"/><path d="M60 22 L78 18 L62 28 Z" fill="${s.c2}"/><circle cx="64" cy="22" r="1.6" fill="#1f2937"/></svg>`;
+    case "mussol": return `<svg viewBox="0 0 100 100"><ellipse cx="50" cy="58" rx="30" ry="32" fill="${s.c1}"/><path d="M26 34 L34 14 L42 32 Z" fill="${s.c1}"/><path d="M74 34 L66 14 L58 32 Z" fill="${s.c1}"/><circle cx="38" cy="48" r="13" fill="#fff6e6"/><circle cx="62" cy="48" r="13" fill="#fff6e6"/><circle cx="38" cy="48" r="6" fill="#2b2420"/><circle cx="62" cy="48" r="6" fill="#2b2420"/><path d="M50 56 L44 66 L56 66 Z" fill="${s.c2}"/></svg>`;
+    case "tuca": return `<svg viewBox="0 0 100 100"><ellipse cx="46" cy="60" rx="26" ry="28" fill="${s.c1}"/><circle cx="70" cy="42" r="16" fill="${s.c1}"/><path d="M78 36 C100 30,100 48,80 52 C86 44,84 38,78 36 Z" fill="${s.c2}"/><circle cx="40" cy="80" r="10" fill="#fff"/><circle cx="76" cy="38" r="2" fill="#fff"/></svg>`;
+    case "anec": return `<svg viewBox="0 0 100 100"><ellipse cx="46" cy="62" rx="28" ry="24" fill="#f5f0e3"/><circle cx="68" cy="40" r="16" fill="${s.c1}"/><path d="M82 40 L96 36 L82 46 Z" fill="${s.c2}"/><circle cx="72" cy="36" r="2" fill="#1f2937"/><path d="M30 70 C20 72,18 80,28 82 C34 78,34 72,30 70 Z" fill="${s.c2}"/></svg>`;
+    case "lloro": return `<svg viewBox="0 0 100 100"><ellipse cx="50" cy="62" rx="24" ry="30" fill="${s.c1}"/><circle cx="50" cy="30" r="15" fill="${s.c2}"/><path d="M50 30 C62 28,66 38,54 42 C56 36,52 32,50 30 Z" fill="#fbbf24"/><circle cx="46" cy="27" r="2" fill="#1f2937"/><path d="M50 88 L44 100 L56 100 Z" fill="${s.c2}"/></svg>`;
+    case "garsa": return `<svg viewBox="0 0 100 100"><ellipse cx="46" cy="55" rx="22" ry="20" fill="${s.c1}"/><path d="M60 55 C90 60,92 95,66 92 C78 80,74 64,60 55 Z" fill="${s.c1}"/><circle cx="34" cy="42" r="12" fill="${s.c1}"/><ellipse cx="42" cy="58" rx="8" ry="14" fill="${s.c2}"/><path d="M24 40 L10 38 L24 46 Z" fill="#374151"/><circle cx="30" cy="39" r="1.8" fill="#fff"/></svg>`;
+    case "boscarla": return `<svg viewBox="0 0 100 100"><ellipse cx="52" cy="60" rx="24" ry="22" fill="${s.c1}"/><circle cx="34" cy="42" r="13" fill="${s.c1}"/><path d="M22 42 L8 40 L22 46 Z" fill="${s.c2}"/><path d="M36 60 L68 60 M36 68 L64 68 M38 76 L60 76" stroke="${s.c2}" stroke-width="2" fill="none" opacity=".6"/><circle cx="30" cy="39" r="1.8" fill="#1f2937"/></svg>`;
+    case "pitroig": return `<svg viewBox="0 0 100 100"><ellipse cx="50" cy="60" rx="25" ry="24" fill="${s.c1}"/><circle cx="36" cy="40" r="13" fill="${s.c1}"/><ellipse cx="46" cy="60" rx="14" ry="16" fill="${s.c2}"/><path d="M24 40 L10 38 L24 46 Z" fill="#78350f"/><circle cx="32" cy="37" r="1.8" fill="#1f2937"/></svg>`;
+    default: return "";
+  }
+}
+
+function buildDeck(){
+  let deck = [];
+  for(const k of SPECIES_KEYS){ for(let i=0;i<SPECIES[k].count;i++) deck.push(k); }
+  return shuffle(deck);
+}
+function shuffle(arr){
+  const a = arr.slice();
+  for(let i=a.length-1;i>0;i--){ const j = Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; }
+  return a;
+}
+function countBy(arr){ const m={}; for(const x of arr) m[x]=(m[x]||0)+1; return m; }
+function uniqueSpecies(arr){ return new Set(arr).size; }
+
+/* ============== UTILITATS ============== */
+function toast(msg, ms=2600){
+  const el = document.getElementById("toast");
+  el.textContent = msg;
+  el.classList.add("show");
+  clearTimeout(window.__toastTimer);
+  window.__toastTimer = setTimeout(()=>el.classList.remove("show"), ms);
+}
+function genCode(){
+  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  let s=""; for(let i=0;i<5;i++) s+=chars[Math.floor(Math.random()*chars.length)];
+  return s;
+}
+function esc(s){ return (s||"").replace(/[&<>"']/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
+
+/* ============== ESTAT LOCAL ============== */
+let db=null, user=null, myId=null, myName="";
+let view = "home"; // home | lobby | game | stats
+let gameCode = null;
+let unsubGame = null;
+let gameState = null; // darrer snapshot de games/<code>
+let myHand = []; // mà privada
+let unsubHand = null;
+let selectedSpecies = null; // per a l'acció "posar ocells"
+let pendingDealt = false;
+let localMode = false; // partida contra la màquina o passa-i-juga (sense db)
+let hotseatMode = false; // passa-i-juga: tots els seients són humans, en un sol dispositiu
+let hotseatRevealed = true; // false mentre es mostra la pantalla "passa el dispositiu"
+let suppressRender = false; // true mentre processem tots els torns de la CPU d'un cop, sense pintar-los
+let botBatchActive = false; // evita bucles reentrants dins scheduleBotTurnsIfNeeded
+let localHands = {}; // seat -> mà de cada jugador local (bots o humans del mateix dispositiu)
+let accountUserId = null; // identitat estable de l'usuari (claude.ai), per sincronitzar estadístiques entre dispositius
+let statsRecorded = false; // evita comptar la mateixa partida acabada més d'una vegada
+let unsubStats = null;
+let statsData = null; // darrer snapshot de data/users/<id>/stats
+let statsLoading = false;
+
+async function initOnline(){
+  db = await window.claude.use("db");
+  user = await window.claude.use("user");
+  if(user){ myId = await user.id(); myName = (await user.me()).name || "Jugador"; accountUserId = myId; }
+  render();
+  // Si l'URL porta un codi de sala (?room=XXXX), l'omplim.
+  const params = new URLSearchParams(location.search);
+  const roomParam = params.get("room");
+  if(roomParam) window.__prefillRoom = roomParam.toUpperCase();
+  renderHome();
+}
+
+
+/* ===== Versió instal·lable: sense servidor. Les estadístiques es guarden en aquest dispositiu. ===== */
+const localStatsDB = {
+  collection(path){ return { doc(id){ const k = "cubirds:"+path+"/"+id; return {
+    async get(){ let v=null; try{ v=JSON.parse(localStorage.getItem(k)||"null"); }catch(e){} return {exists:!!v, data:()=>v}; },
+    async set(v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} },
+    onSnapshot(cb){ this.get().then(cb); return ()=>{}; }
+  }; } }; }
+};
+async function init(){
+  db = localStatsDB; user = null;
+  myId = null; myName = "Tu"; accountUserId = "local";
+  render();
+}
+
+/* ============== LOCKS (exclusió mútua senzilla) ============== */
+async function withLock(lockRef, fn, tries=12){
+  for(let i=0;i<tries;i++){
+    const res = await lockRef.acquire({holder: myId || ("anon-"+Math.random()), ttlMs: 4000});
+    if(res.acquired){
+      try{ await fn(); } finally { /* el lease caduca sol */ }
+      return true;
+    }
+    await new Promise(r=>setTimeout(r, 250 + Math.random()*250));
+  }
+  toast("La taula està ocupada, torna-ho a provar.");
+  return false;
+}
+
+/* ============== CREAR / UNIR-SE A PARTIDA ============== */
+async function createGame(){
+  if(!db){ toast("Aquest visor no permet jugar en línia."); return; }
+  if(!myId){ toast("Has d'iniciar sessió a Claude per jugar en línia."); return; }
+  const code = genCode();
+  const ref = db.doc("games/"+code);
+  await ref.set({
+    code, status:"lobby", createdAt: Date.now(),
+    hostId: myId,
+    players: [{uid:myId, name:myName, seat:0, collection:[], handCount:0, handReady:false, handDiscarded:false}],
+    rows: [[],[],[],[]],
+    drawPile: [], discardPile: [],
+    turnSeat:0, dealerSeat:0, winnerSeat:null, winnerReason:null,
+    roundEndPending:false,
+    log:["S'ha creat la sala."],
+    lastAction: null,
+    updatedAt: Date.now(),
+  });
+  enterGame(code);
+}
+
+async function joinGame(code){
+  code = (code||"").trim().toUpperCase();
+  if(!code){ toast("Escriu un codi de sala."); return; }
+  if(!db){ toast("Aquest visor no permet jugar en línia."); return; }
+  if(!myId){ toast("Has d'iniciar sessió a Claude per jugar en línia."); return; }
+  const ref = db.doc("games/"+code);
+  const snap = await ref.get();
+  if(!snap.exists){ toast("No trobo cap sala amb aquest codi."); return; }
+  const data = snap.data();
+  const already = (data.players||[]).find(p=>p.uid===myId);
+  if(!already){
+    if(data.status!=="lobby"){ toast("Aquesta partida ja ha començat."); return; }
+    if((data.players||[]).length>=4){ toast("La sala ja té 4 jugadors."); return; }
+    const lockRef = ref.collection("locks").doc("join");
+    const ok = await withLock(lockRef, async ()=>{
+      const fresh = await ref.get();
+      const d = fresh.data();
+      if((d.players||[]).find(p=>p.uid===myId)) return;
+      if((d.players||[]).length>=4) throw new Error("full");
+      const seat = d.players.length;
+      const players = d.players.concat([{uid:myId, name:myName, seat, collection:[], handCount:0, handReady:false, handDiscarded:false}]);
+      await ref.update({players, updatedAt: Date.now()});
+    });
+    if(!ok) return;
+  }
+  enterGame(code);
+}
+
+function enterGame(code){
+  gameCode = code;
+  statsRecorded = false;
+  view = "lobby";
+  history.replaceState(null,"","?room="+code);
+  subscribeGame(code);
+  render();
+}
+
+function subscribeGame(code){
+  if(unsubGame) unsubGame();
+  const ref = db.doc("games/"+code);
+  unsubGame = ref.onSnapshot(snap=>{
+    if(!snap.exists){ toast("La sala ha desaparegut."); leaveToHome(); return; }
+    gameState = snap.data();
+    if(gameState.status==="playing" || gameState.status==="dealing") view="game";
+    if(gameState.status==="lobby") view="lobby";
+    maybeSubscribeHand();
+    maybeAutoDeal();
+    render();
+  }, err=>{ toast("S'ha perdut la connexió amb la sala."); });
+}
+
+function maybeSubscribeHand(){
+  if(!gameCode || unsubHand || !myId) return;
+  const ref = db.collection("data/users/"+myId).doc(gameCode);
+  unsubHand = ref.onSnapshot(snap=>{
+    myHand = (snap.exists && snap.data().hand) ? snap.data().hand : [];
+    render();
+  });
+}
+
+function leaveToHome(){
+  if(unsubGame){ unsubGame(); unsubGame=null; }
+  if(unsubHand){ unsubHand(); unsubHand=null; }
+  gameCode=null; gameState=null; myHand=[]; view="home";
+  localMode=false; hotseatMode=false; hotseatRevealed=true; localHands={};
+  history.replaceState(null,"","?");
+  render();
+}
+
+/* ============== MODE CONTRA LA MÀQUINA / PASSA-I-JUGA (sense db, tot local) ============== */
+function localHandFor(seat){ return localHands[seat] || []; }
+function setLocalHandFor(seat, hand){
+  localHands[seat] = hand;
+  // La mà que es mostra com "la teva" només segueix el seient actiu en mode
+  // passa-i-juga (tots els seients són humans). Contra la màquina, la teva
+  // mà és sempre la del seient 0: mai hem de mostrar la mà d'un bot.
+  if(hotseatMode){
+    if(gameState && seat===gameState.turnSeat) myHand = hand;
+  } else if(seat===0){
+    myHand = hand;
+  }
+}
+function syncActiveLocalPlayer(){
+  if(!localMode || !gameState) return;
+  const seat = hotseatMode ? gameState.turnSeat : 0;
+  const p = gameState.players.find(x=>x.seat===seat);
+  if(!p) return;
+  myId = p.uid; myName = p.name;
+  myHand = localHandFor(seat);
+}
+
+function startLocalGame(numBots){
+  if(!myId){ myId = "local-human"; }
+  if(!myName){ myName = "Tu"; }
+  const humanId = myId;
+  let deck = buildDeck();
+  const rows = [[],[],[],[]];
+  for(let r=0;r<4;r++){
+    const used = new Set();
+    let tries=0;
+    while(rows[r].length<3 && tries<500){
+      tries++;
+      const c = deck.shift();
+      if(used.has(c)){ deck.push(c); continue; }
+      used.add(c); rows[r].push(c);
+    }
+  }
+  const players = [];
+  players.push({uid:humanId, name:myName, seat:0, collection:[deck.shift()], handCount:0});
+  for(let i=1;i<=numBots;i++){
+    players.push({uid:"bot-"+i, name:"CPU "+i, seat:i, isBot:true, collection:[deck.shift()], handCount:0});
+  }
+  localHands = {};
+  players.forEach(p=>{
+    const hand = deck.splice(0,8);
+    setLocalHandFor(p.seat, hand);
+    p.handCount = hand.length;
+  });
+  gameState = {
+    code:"LOCAL", status:"playing", hostId:humanId,
+    players, rows, drawPile:deck, discardPile:[],
+    turnSeat:0, dealerSeat:0, winnerSeat:null, winnerReason:null,
+    log:["Partida contra la màquina. Comences tu."],
+  };
+  localMode = true; hotseatMode = false; hotseatRevealed = true; statsRecorded = false;
+  gameCode = "LOCAL"; view="game"; uiPhase="lay"; lastCaptured=[];
+  syncActiveLocalPlayer();
+  history.replaceState(null,"","?");
+  render();
+}
+
+function startHotseatGame(names){
+  let deck = buildDeck();
+  const rows = [[],[],[],[]];
+  for(let r=0;r<4;r++){
+    const used = new Set();
+    let tries=0;
+    while(rows[r].length<3 && tries<500){
+      tries++;
+      const c = deck.shift();
+      if(used.has(c)){ deck.push(c); continue; }
+      used.add(c); rows[r].push(c);
+    }
+  }
+  const players = names.map((name,i)=>({uid:"p"+i, name: name || ("Jugador "+(i+1)), seat:i, collection:[deck.shift()], handCount:0}));
+  localHands = {};
+  players.forEach(p=>{
+    const hand = deck.splice(0,8);
+    localHands[p.seat] = hand;
+    p.handCount = hand.length;
+  });
+  gameState = {
+    code:"HOTSEAT", status:"playing", hostId:players[0].uid,
+    players, rows, drawPile:deck, discardPile:[],
+    turnSeat:0, dealerSeat:0, winnerSeat:null, winnerReason:null,
+    log:[`Partida local (passa el dispositiu). Comença ${esc(players[0].name)}.`],
+  };
+  localMode = true; hotseatMode = true; hotseatRevealed = false; statsRecorded = false;
+  gameCode = "HOTSEAT"; view="game"; uiPhase="lay"; lastCaptured=[];
+  syncActiveLocalPlayer();
+  history.replaceState(null,"","?");
+  render();
+}
+
+function advanceAfterTurn(seat){
+  const d = gameState;
+  const p = d.players.find(x=>x.seat===seat);
+  const win = checkWin(p.collection);
+  if(win){
+    d.status="ended"; d.winnerSeat=seat; d.winnerReason=win;
+    d.log = d.log.concat([`🏆 ${esc(p.name)} ha guanyat: ${win}.`]);
+    render(); return;
+  }
+  if(localHandFor(seat).length===0){ handleLocalRoundEnd(seat); return; }
+  const n = d.players.length;
+  d.turnSeat = (seat+1)%n;
+  uiPhase="lay"; lastCaptured=[]; selectedSpecies=null;
+  syncActiveLocalPlayer();
+  if(hotseatMode) hotseatRevealed = false;
+  render();
+  scheduleBotTurnsIfNeeded();
+}
+
+function handleLocalRoundEnd(endingSeat){
+  const d = gameState;
+  let discard = d.discardPile.slice();
+  d.players.forEach(p=>{ discard = discard.concat(localHandFor(p.seat)); });
+  d.players.forEach(p=> setLocalHandFor(p.seat, []));
+  let pile = d.drawPile.slice();
+  const need = d.players.length*8;
+  if(pile.length<need){ pile = pile.concat(shuffle(discard)); discard=[]; }
+  if(pile.length<need){
+    let best = d.players[0], bestN=-1;
+    d.players.forEach(p=>{ if(p.collection.length>bestN){ bestN=p.collection.length; best=p; } });
+    d.drawPile=pile; d.discardPile=discard; d.status="ended";
+    d.winnerSeat=best.seat; d.winnerReason="més cartes a la col·lecció en no poder-se repartir";
+    d.log = d.log.concat(["No hi ha prou cartes per repartir: fi de la partida."]);
+    render(); return;
+  }
+  d.players.forEach(p=>{
+    const hand = pile.splice(0,8);
+    setLocalHandFor(p.seat, hand);
+    p.handCount = hand.length;
+  });
+  d.drawPile = pile; d.discardPile = discard;
+  d.dealerSeat = endingSeat; d.turnSeat = endingSeat;
+  d.log = d.log.concat(["Nova ronda repartida."]);
+  uiPhase="lay"; lastCaptured=[]; selectedSpecies=null;
+  syncActiveLocalPlayer();
+  if(hotseatMode) hotseatRevealed = false;
+  render();
+  scheduleBotTurnsIfNeeded();
+}
+
+function scheduleBotTurnsIfNeeded(){
+  const d = gameState;
+  if(!localMode || !d || d.status!=="playing") return;
+  const p = d.players.find(x=>x.seat===d.turnSeat);
+  if(!(p && p.isBot)) return;
+  if(botBatchActive) return; // ja hi ha un lot en curs (crida reentrant)
+  botBatchActive = true;
+  suppressRender = true;
+  try{
+    while(gameState.status==="playing"){
+      const cur = gameState.players.find(x=>x.seat===gameState.turnSeat);
+      if(!cur || !cur.isBot) break;
+      runBotTurn(cur.seat);
+      advanceAfterTurn(cur.seat);
+    }
+  } finally {
+    suppressRender = false;
+    botBatchActive = false;
+  }
+  syncActiveLocalPlayer();
+  render();
+}
+
+function runBotTurn(seat){
+  const d = gameState;
+  if(!localMode || d.status!=="playing" || d.turnSeat!==seat) return;
+  let hand = localHandFor(seat).slice();
+  if(hand.length===0){ return; }
+  const speciesInHand = [...new Set(hand)];
+  let best = null;
+  for(const sp of speciesInHand){
+    const qty = hand.filter(c=>c===sp).length;
+    for(let ri=0; ri<4; ri++){
+      for(const side of ["left","right"]){
+        const {captured} = applyLay(d.rows[ri], side, sp, qty);
+        const score = captured.length;
+        if(!best || score>best.score) best = {sp, qty, ri, side, score};
+      }
+    }
+  }
+  const {row:newRow, captured} = applyLay(d.rows[best.ri], best.side, best.sp, best.qty);
+  const rows = d.rows.map(r=>r.slice()); rows[best.ri] = newRow;
+  ensureTwoSpecies(rows[best.ri], d.drawPile, d.discardPile);
+  d.rows = rows;
+  for(let i=0;i<best.qty;i++){ const idx=hand.indexOf(best.sp); if(idx>=0) hand.splice(idx,1); }
+  hand = hand.concat(captured);
+  const pname = d.players.find(p=>p.seat===seat).name;
+  d.log = d.log.concat([`${esc(pname)} ha jugat ${best.qty}× ${SPECIES[best.sp].name} (${captured.length} capturades).`]);
+
+  if(captured.length===0){
+    if(d.drawPile.length<2){ const resh=shuffle(d.discardPile); d.drawPile.push(...resh); d.discardPile.length=0; }
+    hand = hand.concat(d.drawPile.splice(0,2));
+  }
+
+  const counts = countBy(hand);
+  let flockChoice = null;
+  for(const sp of Object.keys(counts)){
+    const n = counts[sp]; const s = SPECIES[sp];
+    if(n>=s.small){
+      const take = n>=s.big ? 2 : 1;
+      if(!flockChoice || take>flockChoice.take || (take===flockChoice.take && n>flockChoice.n)) flockChoice = {sp,n,take};
+    }
+  }
+  if(flockChoice){
+    const revealed = [];
+    for(let i=0;i<flockChoice.n;i++){ const idx=hand.indexOf(flockChoice.sp); if(idx>=0){ hand.splice(idx,1); revealed.push(flockChoice.sp); } }
+    const toCollection = revealed.slice(0, flockChoice.take);
+    const toDiscard = revealed.slice(flockChoice.take);
+    d.discardPile = d.discardPile.concat(toDiscard);
+    d.players = d.players.map(p=> p.seat===seat ? {...p, collection:p.collection.concat(toCollection)} : p);
+    d.log = d.log.concat([`${esc(pname)} ha completat una bandada de ${SPECIES[flockChoice.sp].name} (+${flockChoice.take}).`]);
+  }
+
+  setLocalHandFor(seat, hand);
+  d.players = d.players.map(p=> p.seat===seat ? {...p, handCount:hand.length} : p);
+}
+
+function doLayLocal(side){
+  if(!selectedSpecies){ toast("Tria primer una espècie de la teva mà."); return; }
+  const species = selectedSpecies;
+  const seat = gameState.turnSeat;
+  const hand = localHandFor(seat);
+  const qty = hand.filter(c=>c===species).length;
+  if(qty===0) return;
+  const rowIdx = window.__chosenRow;
+  if(rowIdx==null){ toast("Tria una fila."); return; }
+  const d = gameState;
+  const rows = d.rows.map(r=>r.slice());
+  const {row:newRow, captured} = applyLay(rows[rowIdx], side, species, qty);
+  rows[rowIdx] = newRow;
+  ensureTwoSpecies(rows[rowIdx], d.drawPile, d.discardPile);
+  const newHand = hand.slice();
+  for(let i=0;i<qty;i++){ const idx=newHand.indexOf(species); if(idx>=0) newHand.splice(idx,1); }
+  const finalHand = newHand.concat(captured);
+  setLocalHandFor(seat, finalHand);
+  d.rows = rows;
+  d.players = d.players.map(p=> p.seat===seat ? {...p, handCount:finalHand.length} : p);
+  d.log = d.log.concat([`${esc(myName)} ha jugat ${qty}× ${SPECIES[species].name} i ha capturat ${captured.length} carta(es).`]);
+  lastCaptured = captured;
+  uiPhase = captured.length>0 ? "flockOrEnd" : "postlay";
+  selectedSpecies=null; window.__chosenRow=null;
+  render();
+}
+
+function doDrawTwoLocal(){
+  const d = gameState;
+  const seat = d.turnSeat;
+  if(d.drawPile.length<2){ const resh=shuffle(d.discardPile); d.drawPile.push(...resh); d.discardPile.length=0; }
+  const hand = localHandFor(seat).concat(d.drawPile.splice(0,2));
+  setLocalHandFor(seat, hand);
+  d.players = d.players.map(p=> p.seat===seat ? {...p, handCount:hand.length} : p);
+  d.log = d.log.concat([`${esc(myName)} ha robat 2 cartes.`]);
+  uiPhase="flockOrEnd";
+  render();
+}
+
+function doFlockLocal(species){
+  const d = gameState;
+  const seat = d.turnSeat;
+  const hand = localHandFor(seat);
+  const inHand = hand.filter(c=>c===species).length;
+  const sp = SPECIES[species];
+  if(inHand < sp.small){ toast("No tens prou cartes d'aquesta espècie."); return; }
+  const take = inHand>=sp.big ? 2 : 1;
+  const newHand = hand.slice();
+  const revealed = [];
+  for(let i=0;i<inHand;i++){ const idx=newHand.indexOf(species); if(idx>=0){ newHand.splice(idx,1); revealed.push(species); } }
+  const toCollection = revealed.slice(0,take);
+  const toDiscard = revealed.slice(take);
+  setLocalHandFor(seat, newHand);
+  d.discardPile = d.discardPile.concat(toDiscard);
+  d.players = d.players.map(p=> p.seat===seat ? {...p, collection:p.collection.concat(toCollection), handCount:newHand.length} : p);
+  d.log = d.log.concat([`${esc(myName)} ha completat una bandada de ${sp.name} (+${take}).`]);
+  uiPhase="end";
+  render();
+}
+
+function endTurnLocal(){ advanceAfterTurn(gameState.turnSeat); }
+
+/* ============== REPARTIMENT (self-service) ============== */
+async function startGame(){
+  if(!gameState) return;
+  const players = gameState.players;
+  if(players.length<2){ toast("Calen com a mínim 2 jugadors."); return; }
+  const ref = db.doc("games/"+gameCode);
+  const lockRef = ref.collection("locks").doc("start");
+  await withLock(lockRef, async ()=>{
+    const fresh = await ref.get();
+    const d = fresh.data();
+    if(d.status!=="lobby") return;
+    let deck = buildDeck();
+    // 4 files amb 3 espècies diferents cada una
+    const rows = [[],[],[],[]];
+    for(let r=0;r<4;r++){
+      const used = new Set();
+      let tries=0;
+      while(rows[r].length<3 && tries<500){
+        tries++;
+        const c = deck.shift();
+        if(used.has(c)){ deck.push(c); continue; }
+        used.add(c); rows[r].push(c);
+      }
+    }
+    // bandada inicial de cada jugador (1 carta a la col·lecció)
+    const newPlayers = d.players.map(p=>({...p, collection:[deck.shift()], handCount:0, handReady:false, handDiscarded:false}));
+    await ref.update({
+      status:"dealing", rows, drawPile:deck, discardPile:[],
+      players:newPlayers, dealerSeat:0, turnSeat:0, winnerSeat:null, winnerReason:null,
+      roundEndPending:false,
+      log:(d.log||[]).concat(["Comença la partida! Repartint cartes..."]),
+      updatedAt: Date.now(),
+    });
+  });
+}
+
+async function maybeAutoDeal(){
+  if(!gameState || gameState.status!=="dealing" || !myId) return;
+  const me = (gameState.players||[]).find(p=>p.uid===myId);
+  if(!me || me.handReady) return;
+  if(pendingDealt) return;
+  pendingDealt = true;
+  try{
+    const ref = db.doc("games/"+gameCode);
+    const lockRef = ref.collection("locks").doc("deal");
+    await withLock(lockRef, async ()=>{
+      const fresh = await ref.get();
+      const d = fresh.data();
+      const p2 = (d.players||[]).find(x=>x.uid===myId);
+      if(!p2 || p2.handReady) return;
+      let pile = d.drawPile.slice();
+      const myNewHand = pile.splice(0,8);
+      const players = d.players.map(p=> p.uid===myId ? {...p, handCount:myNewHand.length, handReady:true} : p);
+      const allReady = players.every(p=>p.handReady);
+      await db.collection("data/users/"+myId).doc(gameCode).set({hand: myNewHand});
+      await ref.update({
+        drawPile: pile, players,
+        status: allReady ? "playing" : "dealing",
+        log: allReady ? (d.log||[]).concat(["Totes les mans repartides. Comença la partida!"]) : (d.log||[]),
+        updatedAt: Date.now(),
+      });
+    });
+  } finally { pendingDealt = false; }
+}
+
+/* ============== LÒGICA DE TORN ============== */
+function applyLay(row, side, species, qty){
+  const newCards = Array(qty).fill(species);
+  let arr = row.slice();
+  if(side==="left"){
+    const idx = arr.findIndex(c=>c===species);
+    if(idx===-1){ return {row: newCards.concat(arr), captured:[]}; }
+    const captured = arr.slice(0, idx);
+    const rest = arr.slice(idx);
+    return {row: newCards.concat(rest), captured};
+  } else {
+    let idx=-1;
+    for(let i=arr.length-1;i>=0;i--){ if(arr[i]===species){ idx=i; break; } }
+    if(idx===-1){ return {row: arr.concat(newCards), captured:[]}; }
+    const captured = arr.slice(idx+1);
+    const rest = arr.slice(0, idx+1);
+    return {row: rest.concat(newCards), captured};
+  }
+}
+function ensureTwoSpecies(row, drawPile, discardPile){
+  let guard=0;
+  while(uniqueSpecies(row)<2 && guard<200){
+    guard++;
+    if(drawPile.length===0){
+      if(discardPile.length===0) break;
+      const reshuffled = shuffle(discardPile);
+      drawPile.push(...reshuffled);
+      discardPile.length = 0;
+    }
+    row.push(drawPile.shift());
+  }
+}
+function checkWin(collection){
+  const counts = countBy(collection);
+  const distinct = Object.keys(counts).length;
+  if(distinct>=7) return "7 espècies diferents a la col·lecció";
+  const bigEnough = Object.values(counts).filter(n=>n>=3).length;
+  if(bigEnough>=2) return "3 cartes de 2 espècies diferents a la col·lecció";
+  return null;
+}
+
+let uiPhase = "lay"; // lay | postlay | flock
+let lastCaptured = [];
+
+async function doLay(side){
+  if(localMode){ doLayLocal(side); return; }
+  if(!selectedSpecies) { toast("Tria primer una espècie de la teva mà."); return; }
+  const species = selectedSpecies;
+  const qty = myHand.filter(c=>c===species).length;
+  if(qty===0) return;
+  const rowIdx = window.__chosenRow;
+  if(rowIdx==null){ toast("Tria una fila."); return; }
+
+  const ref = db.doc("games/"+gameCode);
+  const lockRef = ref.collection("locks").doc("turn");
+  await withLock(lockRef, async ()=>{
+    const fresh = await ref.get();
+    const d = fresh.data();
+    const me = d.players.find(p=>p.uid===myId);
+    if(d.turnSeat!==me.seat){ toast("No és el teu torn."); return; }
+    const rows = d.rows.map(r=>r.slice());
+    const {row:newRow, captured} = applyLay(rows[rowIdx], side, species, qty);
+    rows[rowIdx] = newRow;
+    const drawPile = d.drawPile.slice();
+    const discardPile = d.discardPile.slice();
+    ensureTwoSpecies(rows[rowIdx], drawPile, discardPile);
+
+    // mà: treu les cartes jugades, afegeix les capturades
+    const newHand = myHand.slice();
+    for(let i=0;i<qty;i++){ const idx=newHand.indexOf(species); if(idx>=0) newHand.splice(idx,1); }
+    const handAfter = newHand.concat(captured);
+
+    await db.collection("data/users/"+myId).doc(gameCode).set({hand: handAfter});
+    const players = d.players.map(p=> p.uid===myId ? {...p, handCount:handAfter.length} : p);
+    await ref.update({
+      rows, drawPile, discardPile, players,
+      log: (d.log||[]).concat([`${myName} ha jugat ${qty}× ${SPECIES[species].name} i ha capturat ${captured.length} carta(es).`]),
+      lastAction: {type:"lay", seat:me.seat},
+      updatedAt: Date.now(),
+    });
+    lastCaptured = captured;
+    uiPhase = captured.length>0 ? "flockOrEnd" : "postlay";
+    selectedSpecies=null; window.__chosenRow=null;
+    render();
+  });
+}
+
+async function doDrawTwo(){
+  if(localMode){ doDrawTwoLocal(); return; }
+  const ref = db.doc("games/"+gameCode);
+  const lockRef = ref.collection("locks").doc("turn");
+  await withLock(lockRef, async ()=>{
+    const fresh = await ref.get();
+    const d = fresh.data();
+    const me = d.players.find(p=>p.uid===myId);
+    if(d.turnSeat!==me.seat) return;
+    let drawPile = d.drawPile.slice();
+    let discardPile = d.discardPile.slice();
+    if(drawPile.length<2){
+      discardPile = shuffle(discardPile); drawPile.push(...discardPile); discardPile=[];
+    }
+    const taken = drawPile.splice(0,2);
+    const handAfter = myHand.concat(taken);
+    await db.collection("data/users/"+myId).doc(gameCode).set({hand: handAfter});
+    const players = d.players.map(p=> p.uid===myId ? {...p, handCount:handAfter.length} : p);
+    await ref.update({drawPile, discardPile, players, log:(d.log||[]).concat([`${myName} ha robat 2 cartes.`]), updatedAt: Date.now()});
+  });
+  uiPhase = "flockOrEnd";
+  render();
+}
+
+async function doFlock(species){
+  if(localMode){ doFlockLocal(species); return; }
+  const inHand = myHand.filter(c=>c===species).length;
+  const sp = SPECIES[species];
+  if(inHand < sp.small){ toast("No tens prou cartes d'aquesta espècie."); return; }
+  const take = inHand>=sp.big ? 2 : 1;
+  const ref = db.doc("games/"+gameCode);
+  const lockRef = ref.collection("locks").doc("turn");
+  await withLock(lockRef, async ()=>{
+    const fresh = await ref.get();
+    const d = fresh.data();
+    const me = d.players.find(p=>p.uid===myId);
+    if(d.turnSeat!==me.seat) return;
+    const newHand = myHand.slice();
+    const revealed = [];
+    for(let i=0;i<inHand;i++){ const idx=newHand.indexOf(species); if(idx>=0){ newHand.splice(idx,1); revealed.push(species); } }
+    const toCollection = revealed.slice(0,take);
+    const toDiscard = revealed.slice(take);
+    await db.collection("data/users/"+myId).doc(gameCode).set({hand:newHand});
+    const discardPile = d.discardPile.concat(toDiscard);
+    const players = d.players.map(p=> p.uid===myId ? {...p, collection:p.collection.concat(toCollection), handCount:newHand.length} : p);
+    await ref.update({discardPile, players, log:(d.log||[]).concat([`${myName} ha completat una bandada de ${sp.name} (+${take}).`]), updatedAt: Date.now()});
+    myHand = newHand;
+  });
+  uiPhase = "end";
+  render();
+}
+
+async function endTurn(){
+  if(localMode){ endTurnLocal(); return; }
+  const ref = db.doc("games/"+gameCode);
+  const lockRef = ref.collection("locks").doc("turn");
+  await withLock(lockRef, async ()=>{
+    const fresh = await ref.get();
+    const d = fresh.data();
+    const me = d.players.find(p=>p.uid===myId);
+    if(d.turnSeat!==me.seat) return;
+
+    const win = checkWin(me.collection);
+    if(win){
+      await ref.update({status:"ended", winnerSeat:me.seat, winnerReason:win, log:(d.log||[]).concat([`🏆 ${myName} ha guanyat: ${win}.`]), updatedAt: Date.now()});
+      return;
+    }
+
+    if(me.handCount===0){
+      // Fi de ronda: cal que tothom més descarti la seva mà i es reparteixi de nou.
+      const players = d.players.map(p=>({...p, handDiscarded: p.uid===myId ? true : p.handCount===0, handReady:false}));
+      await ref.update({
+        status:"roundend", players,
+        dealerSeat: me.seat,
+        log:(d.log||[]).concat([`${myName} s'ha quedat sense cartes. Fi de ronda, es reparteix de nou.`]),
+        updatedAt: Date.now(),
+      });
+      return;
+    }
+
+    const n = d.players.length;
+    const nextSeat = (me.seat+1)%n;
+    await ref.update({turnSeat: nextSeat, updatedAt: Date.now()});
+  });
+  uiPhase="lay"; lastCaptured=[];
+  render();
+}
+
+async function maybeHandleRoundEnd(){
+  if(!gameState || gameState.status!=="roundend" || !myId) return;
+  const me = (gameState.players||[]).find(p=>p.uid===myId);
+  if(!me || me.handDiscarded) return;
+  const ref = db.doc("games/"+gameCode);
+  const lockRef = ref.collection("locks").doc("roundend");
+  await withLock(lockRef, async ()=>{
+    const fresh = await ref.get();
+    const d = fresh.data();
+    const p2 = d.players.find(x=>x.uid===myId);
+    if(!p2 || p2.handDiscarded) return;
+    const discardPile = d.discardPile.concat(myHand);
+    await db.collection("data/users/"+myId).doc(gameCode).set({hand:[]});
+    const players = d.players.map(p=> p.uid===myId ? {...p, handDiscarded:true, handCount:0} : p);
+    const allDone = players.every(p=>p.handDiscarded);
+    let patch = {discardPile, players, updatedAt: Date.now()};
+    if(allDone){
+      let pile = d.drawPile.concat(discardPile===d.discardPile? [] : []); // drawPile sense canvis previs
+      pile = d.drawPile.slice();
+      let disc = discardPile.slice();
+      // comprovem que hi hagi prou cartes per repartir 8 a cadascú
+      const need = players.length*8;
+      if(pile.length < need){
+        pile = pile.concat(shuffle(disc)); disc=[];
+      }
+      if(pile.length < need){
+        // no es pot repartir: fi de joc per manca de cartes
+        let best = players[0], bestN = -1;
+        for(const p of players){ const n=p.collection.length; if(n>bestN){bestN=n; best=p;} }
+        patch = {...patch, drawPile:pile, discardPile:disc, status:"ended", winnerSeat:best.seat, winnerReason:"més cartes de pájaros en no poder-se repartir", log:(d.log||[]).concat(["No hi ha prou cartes per repartir: fi de la partida."])};
+      } else {
+        patch = {...patch, drawPile:pile, discardPile:disc, status:"dealing",
+          players: players.map(p=>({...p, handReady:false, handDiscarded:false})),
+          turnSeat: d.dealerSeat,
+          log:(d.log||[]).concat(["Nova ronda: repartint 8 cartes a cadascú."])};
+      }
+    }
+    await ref.update(patch);
+  });
+}
+
+/* ============== RENDER ============== */
+function el(html){ const t=document.createElement("template"); t.innerHTML=html.trim(); return t.content.firstChild; }
+
+function renderHome(){
+  const app = document.getElementById("app");
+  app.innerHTML = `
+    <div class="topbar"><div class="brand">🐦 Cubirds</div><button class="secondary" id="btn-stats" style="padding:6px 10px; font-size:13px;">📊 Estadístiques</button></div>
+    <div class="card-panel center" style="display:none">
+      <h2>Fes volar bandades amb la família o els amics</h2>
+      <p class="muted">Crea una sala nova o uneix-te amb un codi de 5 lletres. Cal tenir sessió iniciada a Claude per jugar en línia.</p>
+      <div class="row" style="justify-content:center; margin:16px 0;">
+        <button id="btn-create">Crear una sala nova</button>
+      </div>
+      <div class="row" style="justify-content:center; gap:6px;">
+        <input type="text" id="join-code" placeholder="Codi de sala (ex. AB3K9)" style="max-width:220px; text-transform:uppercase;">
+        <button class="secondary" id="btn-join">Unir-me</button>
+      </div>
+    </div>
+    <div class="card-panel center">
+      <h3>🤖 Juga contra la màquina</h3>
+      <p class="muted small">Funciona sense connexió.</p>
+      <div class="row" style="justify-content:center; gap:8px; flex-wrap:wrap;">
+        <button class="secondary" id="btn-cpu1">Tu vs 1 CPU</button>
+        <button class="secondary" id="btn-cpu2">Tu vs 2 CPU</button>
+        <button class="secondary" id="btn-cpu3">Tu vs 3 CPU</button>
+      </div>
+    </div>
+    <div class="card-panel center">
+      <h3>🪑 Juga en local, passant el dispositiu</h3>
+      <p class="muted small">Ideal amb un sol mòbil o tauleta: cada jugador hi veu només la seva mà quan li toca.</p>
+      <div class="row" style="justify-content:center; gap:8px; flex-wrap:wrap;" id="hotseat-count-row">
+        <button class="secondary" id="btn-hotseat2">2 jugadors</button>
+        <button class="secondary" id="btn-hotseat3">3 jugadors</button>
+        <button class="secondary" id="btn-hotseat4">4 jugadors</button>
+      </div>
+      <div id="hotseat-names"></div>
+    </div>
+    <div class="card-panel">
+      <h3>Com es juga (resum ràpid)</h3>
+      <p class="small">Cada torn: has de jugar totes les cartes d'una espècie a un extrem d'una fila. Si hi coincideix amb un ocell igual, et quedes amb les cartes del mig a la mà. Si no capturis res, pots robar 2 cartes. Després, pots revelar una bandada completa de la mà per sumar-la a la teva col·lecció (1 carta si arribes al nombre petit, 2 si arribes al gran). Guanya qui aconsegueix 7 espècies diferents a la col·lecció, o 3 cartes de 2 espècies diferents.</p>
+      <table class="legend-table">
+        <tr><th>Espècie</th><th>Cartes</th><th>Bandada petita</th><th>Bandada gran</th></tr>
+        ${SPECIES_KEYS.map(k=>{const s=SPECIES[k]; return `<tr><td><span class="mini-bird">${birdImg(k)}</span> ${s.name}</td><td>${s.count}</td><td>${s.small}</td><td>${s.big}</td></tr>`;}).join("")}
+      </table>
+    </div>
+  `;
+  if(window.__prefillRoom) document.getElementById("join-code").value = window.__prefillRoom;
+  document.getElementById("btn-create").onclick = createGame;
+  document.getElementById("btn-join").onclick = ()=>joinGame(document.getElementById("join-code").value);
+  document.getElementById("join-code").addEventListener("keydown", e=>{ if(e.key==="Enter") joinGame(e.target.value); });
+  document.getElementById("btn-cpu1").onclick = ()=>startLocalGame(1);
+  document.getElementById("btn-cpu2").onclick = ()=>startLocalGame(2);
+  document.getElementById("btn-cpu3").onclick = ()=>startLocalGame(3);
+  document.getElementById("btn-stats").onclick = openStats;
+  document.getElementById("btn-hotseat2").onclick = ()=>showHotseatNameForm(2);
+  document.getElementById("btn-hotseat3").onclick = ()=>showHotseatNameForm(3);
+  document.getElementById("btn-hotseat4").onclick = ()=>showHotseatNameForm(4);
+}
+
+function showHotseatNameForm(n){
+  const box = document.getElementById("hotseat-names");
+  if(!box) return;
+  box.innerHTML = `
+    <div style="margin-top:14px; max-width:320px; margin-left:auto; margin-right:auto; text-align:left;">
+      <p class="muted small" style="text-align:center;">Nom de cada jugador (opcional):</p>
+      ${Array.from({length:n}).map((_,i)=>`<input type="text" class="hotseat-name-input" placeholder="Jugador ${i+1}" style="margin-bottom:6px; width:100%;">`).join("")}
+      <div class="row" style="justify-content:center; gap:8px; margin-top:8px;">
+        <button id="btn-hotseat-start">Comença la partida</button>
+      </div>
+    </div>`;
+  document.getElementById("hotseat-count-row").style.display = "none";
+  document.getElementById("btn-hotseat-start").onclick = ()=>{
+    const names = Array.from(document.querySelectorAll(".hotseat-name-input")).map(inp=>inp.value.trim());
+    startHotseatGame(names);
+  };
+}
+
+function renderLobby(){
+  const app = document.getElementById("app");
+  const d = gameState;
+  const isHost = d.hostId===myId;
+  app.innerHTML = `
+    <div class="topbar">
+      <div class="brand">🐦 Cubirds</div>
+      <div class="code-chip" id="code-chip" title="Copia el codi">${d.code}</div>
+    </div>
+    <div class="card-panel center">
+      <h2>Sala d'espera</h2>
+      <p class="muted">Comparteix aquest codi (o l'enllaç) amb qui vulgui jugar. De 2 a 4 jugadors.</p>
+      <div class="players-strip" style="justify-content:center;">
+        ${d.players.map(p=>`<div class="player-chip"><span class="pname">${esc(p.name)}${p.uid===myId?" (tu)":""}</span><span class="muted small">Seient ${p.seat+1}</span></div>`).join("")}
+      </div>
+      <div class="row" style="justify-content:center; gap:8px; margin-top:14px;">
+        ${isHost ? `<button id="btn-start" ${d.players.length<2?"disabled":""}>Comença la partida</button>` : `<span class="muted">Esperant que ${esc((d.players.find(p=>p.uid===d.hostId)||{}).name||"l'amfitrió")} comenci...</span>`}
+        <button class="secondary" id="btn-share">Copiar enllaç</button>
+        <button class="secondary" id="btn-leave">Sortir</button>
+      </div>
+    </div>
+  `;
+  document.getElementById("code-chip").onclick = copyLink;
+  document.getElementById("btn-share").onclick = copyLink;
+  document.getElementById("btn-leave").onclick = leaveToHome;
+  if(isHost) document.getElementById("btn-start").onclick = startGame;
+}
+
+async function recordGameResult(d){
+  if(statsRecorded) return;
+  statsRecorded = true;
+  if(!db || !accountUserId) return; // sense sessió: no hi ha on sincronitzar-ho
+  const mode = hotseatMode ? "hotseat" : (localMode ? "cpu" : "online");
+  let seatOfMe = null;
+  if(mode==="online") seatOfMe = (d.players.find(p=>p.uid===accountUserId)||{}).seat;
+  else if(mode==="cpu") seatOfMe = 0; // en contra la màquina, el seient 0 és sempre tu
+  const mePlayer = seatOfMe!=null ? d.players.find(p=>p.seat===seatOfMe) : null;
+  const won = mePlayer!=null && d.winnerSeat===seatOfMe;
+  try{
+    const ref = db.collection("data/users/"+accountUserId).doc("stats");
+    const snap = await ref.get();
+    const cur = snap.exists ? (snap.data()||{}) : {};
+    cur.gamesPlayed = (cur.gamesPlayed||0) + 1;
+    cur.byMode = cur.byMode || {};
+    cur.byMode[mode] = cur.byMode[mode] || {played:0, wins:0};
+    cur.byMode[mode].played += 1;
+    if(mode!=="hotseat"){
+      if(won){ cur.wins=(cur.wins||0)+1; cur.byMode[mode].wins+=1; } else { cur.losses=(cur.losses||0)+1; }
+      if(mePlayer){
+        cur.bestCollectionSize = Math.max(cur.bestCollectionSize||0, mePlayer.collection.length);
+        cur.bestSpeciesCount = Math.max(cur.bestSpeciesCount||0, uniqueSpecies(mePlayer.collection));
+      }
+    } else {
+      const w = d.players.find(p=>p.seat===d.winnerSeat);
+      cur.hotseatWinners = (cur.hotseatWinners||[]).concat([{name:(w?w.name:"?"), at:Date.now()}]).slice(-20);
+    }
+    cur.updatedAt = Date.now();
+    await ref.set(cur);
+  }catch(e){ /* best-effort: mai bloquejar la UI per això */ }
+}
+
+function copyLink(){
+  const url = location.origin + location.pathname + "?room=" + gameCode;
+  navigator.clipboard?.writeText(url).then(()=>toast("Enllaç copiat!")).catch(()=>toast("Codi: "+gameCode));
+}
+
+function renderGame(){
+  const app = document.getElementById("app");
+  const d = gameState;
+  if(d.status==="roundend"){ maybeHandleRoundEnd(); }
+  if(d.status==="dealing"){
+    app.innerHTML = `<div class="topbar"><div class="brand">🐦 Cubirds</div><div class="code-chip">${d.code}</div></div>
+      <div class="card-panel center"><h2>Repartint cartes…</h2><p class="muted">Esperant que tots els jugadors rebin la seva mà.</p>
+      <div class="players-strip" style="justify-content:center;">${d.players.map(p=>`<div class="player-chip">${esc(p.name)}: ${p.handReady?"✅ llest":"…repartint"}</div>`).join("")}</div></div>`;
+    return;
+  }
+  if(d.status==="roundend"){
+    app.innerHTML = `<div class="topbar"><div class="brand">🐦 Cubirds</div><div class="code-chip">${d.code}</div></div>
+      <div class="card-panel center"><h2>Fi de ronda</h2><p class="muted">Tothom descarta la mà i es reparteix una nova ronda…</p></div>`;
+    return;
+  }
+  const me = d.players.find(p=>p.uid===myId);
+  const mySeat = me ? me.seat : -1;
+  const isMyTurn = me && d.turnSeat===mySeat && d.status==="playing";
+
+  let banner = "";
+  if(d.status==="ended"){
+    recordGameResult(d);
+    const w = d.players.find(p=>p.seat===d.winnerSeat);
+    banner = `<div class="winner-banner">🏆 ${esc(w?w.name:"?")} guanya la partida<br><span style="font-size:14px;font-weight:600;">${esc(d.winnerReason||"")}</span></div>
+      <div class="center" style="margin-bottom:14px;"><button id="btn-leave-end">Tornar a l'inici</button></div>`;
+  }
+
+  app.innerHTML = `
+    <div class="topbar">
+      <div class="brand">🐦 Cubirds</div>
+      <div class="row" style="gap:8px;">
+        ${hotseatMode ? `<div class="code-chip" style="cursor:default;">🪑 Passa i juga</div>` : localMode ? `<div class="code-chip" style="cursor:default;">🤖 Contra la màquina</div>` : `<div class="code-chip" id="code-chip-game">${d.code}</div>`}
+        <button class="secondary" id="btn-exit" style="padding:6px 10px; font-size:13px;">Sortir</button>
+      </div>
+    </div>
+    ${banner}
+    <div class="players-strip">
+      ${d.players.map(p=>`
+        <div class="player-chip ${p.seat===d.turnSeat && d.status==='playing' ?'is-turn':''}">
+          <span class="pname">${esc(p.name)}${p.uid===myId?" (tu)":""} <span class="muted">🂠${p.handCount}</span></span>
+          <div class="collection-row">
+            <span class="collection-count" title="Cartes a la col·lecció">${p.collection.length}</span>
+            ${(()=>{ const c=countBy(p.collection); const ks=Object.keys(c);
+              return ks.length ? ks.map(k=>`
+                <div class="collection-species">
+                  <span class="mini-bird" title="${SPECIES[k].name}">${birdImg(k)}</span>
+                  <span class="collection-species-count">${c[k]}</span>
+                </div>`).join("") : '<span class="muted small">(sense col·lecció)</span>';
+            })()}
+          </div>
+        </div>`).join("")}
+    </div>
+    <div class="card-panel">
+      <div class="step-tag">${turnLabel(d, me, isMyTurn)}</div>
+      <div class="table-rows" id="table-rows">
+        ${d.rows.map((row,ri)=>renderRow(row, ri, isMyTurn)).join("")}
+      </div>
+    </div>
+    ${d.status==="playing" ? renderHandPanel(isMyTurn) : ""}
+    <div class="card-panel">
+      <h3 class="small" style="margin-bottom:4px;">Historial</h3>
+      <div class="log-box">${(d.log||[]).slice(-12).reverse().map(l=>`<div>• ${esc(l)}</div>`).join("")}</div>
+    </div>
+  `;
+  if(d.status==="ended"){
+    const b = document.getElementById("btn-leave-end");
+    if(b) b.onclick = leaveToHome;
+  }
+  document.getElementById("btn-exit").onclick = leaveToHome;
+  const codeChip = document.getElementById("code-chip-game");
+  if(codeChip) codeChip.onclick = copyLink;
+  wireRowButtons(isMyTurn);
+  wireHandPanel(isMyTurn);
+}
+
+function turnLabel(d, me, isMyTurn){
+  const current = d.players.find(p=>p.seat===d.turnSeat);
+  if(!isMyTurn) return `Torn de ${esc(current?current.name:"?")}…`;
+  if(uiPhase==="lay") return "El teu torn — tria una espècie de la mà i posa-la a l'esquerra o dreta d'una fila.";
+  if(uiPhase==="postlay") return "No has capturat res. Pots robar 2 cartes (opcional) i després acabar el torn.";
+  if(uiPhase==="flockOrEnd") return "Pots completar una bandada (opcional) i després acabar el torn.";
+  return "Acaba el torn quan vulguis.";
+}
+
+function renderRow(row, ri, isMyTurn){
+  const canAct = isMyTurn && uiPhase==="lay" && selectedSpecies;
+  return `
+  <div class="table-row">
+    <button class="row-side-btn secondary" data-row="${ri}" data-side="left" ${canAct?"":"disabled"}>⟵</button>
+    <div class="row-cards">
+      ${row.map(c=>`<div class="bird-card">${birdImg(c)}</div>`).join("")}
+    </div>
+    <button class="row-side-btn secondary" data-row="${ri}" data-side="right" ${canAct?"":"disabled"}>⟶</button>
+  </div>`;
+}
+
+function renderHandPanel(isMyTurn){
+  const counts = countBy(myHand);
+  const keys = Object.keys(counts);
+  return `
+  <div class="card-panel hand-section">
+    <h3>La teva mà (${myHand.length} cartes)</h3>
+    <div class="hand-species-list" id="hand-species">
+      ${keys.length? keys.map(k=>`
+        <div class="hand-card ${selectedSpecies===k?'selected':''}" data-species="${k}">
+          <div class="bird-card">${birdImg(k)}</div>
+          <div class="cnt-badge">×${counts[k]}</div>
+        </div>`).join("") : '<span class="muted">No tens cartes.</span>'}
+    </div>
+    <div class="actions-bar" id="hand-actions"></div>
+  </div>`;
+}
+
+function wireRowButtons(isMyTurn){
+  document.querySelectorAll('[data-row]').forEach(btn=>{
+    btn.onclick = ()=>{ window.__chosenRow = parseInt(btn.dataset.row,10); doLay(btn.dataset.side); };
+  });
+}
+
+function wireHandPanel(isMyTurn){
+  const actionsBar = document.getElementById("hand-actions");
+  if(!actionsBar) return;
+  document.querySelectorAll('#hand-species [data-species]').forEach(pill=>{
+    pill.onclick = ()=>{
+      if(!isMyTurn || uiPhase!=="lay") { if(uiPhase==="flockOrEnd") { doFlock(pill.dataset.species); } return; }
+      selectedSpecies = (selectedSpecies===pill.dataset.species) ? null : pill.dataset.species;
+      render();
+    };
+  });
+  if(!isMyTurn){ actionsBar.innerHTML = `<span class="muted small">Espera el teu torn.</span>`; return; }
+  if(uiPhase==="lay"){
+    actionsBar.innerHTML = selectedSpecies ? `<span class="muted small">Ara tria una fila i un costat (⟵ / ⟶) a dalt.</span>` : `<span class="muted small">Selecciona una espècie de la teva mà.</span>`;
+  } else if(uiPhase==="postlay"){
+    actionsBar.innerHTML = `<button id="btn-draw2">Robar 2 cartes</button> <button class="secondary" id="btn-skip-draw">No robar</button>`;
+    document.getElementById("btn-draw2").onclick = doDrawTwo;
+    document.getElementById("btn-skip-draw").onclick = ()=>{ uiPhase="flockOrEnd"; render(); };
+  } else if(uiPhase==="flockOrEnd"){
+    actionsBar.innerHTML = `<span class="muted small">Toca una espècie amunt per completar-ne la bandada, o acaba el torn.</span> <button id="btn-end-turn">Acabar el torn</button>`;
+    document.getElementById("btn-end-turn").onclick = endTurn;
+  } else if(uiPhase==="end"){
+    actionsBar.innerHTML = `<button id="btn-end-turn">Acabar el torn</button>`;
+    document.getElementById("btn-end-turn").onclick = endTurn;
+  }
+}
+
+function render(){
+  if(suppressRender) return;
+  if(view==="home") renderHome();
+  else if(view==="lobby") renderLobby();
+  else if(view==="stats") renderStats();
+  else if(view==="game"){
+    if(hotseatMode && !hotseatRevealed && gameState && gameState.status==="playing") renderPassScreen();
+    else renderGame();
+  }
+}
+
+function openStats(){
+  view = "stats";
+  statsData = null; statsLoading = true;
+  if(db && accountUserId){
+    if(unsubStats) unsubStats();
+    const ref = db.collection("data/users/"+accountUserId).doc("stats");
+    unsubStats = ref.onSnapshot(snap=>{
+      statsData = snap.exists ? snap.data() : {};
+      statsLoading = false;
+      render();
+    }, err=>{ statsLoading=false; render(); });
+  } else {
+    statsLoading = false;
+  }
+  render();
+}
+
+function closeStats(){
+  if(unsubStats){ unsubStats(); unsubStats=null; }
+  view = "home";
+  render();
+}
+
+function renderStats(){
+  const app = document.getElementById("app");
+  if(!db || !accountUserId){
+    app.innerHTML = `
+      <div class="topbar"><div class="brand">🐦 Cubirds</div></div>
+      <div class="card-panel center">
+        <h2>📊 Estadístiques</h2>
+        <p class="muted">Per guardar i sincronitzar les teves estadístiques entre el mòbil, l'iPad i l'ordinador cal tenir sessió iniciada a Claude.</p>
+        <div class="row" style="justify-content:center; margin-top:10px;"><button class="secondary" id="btn-stats-back">Tornar</button></div>
+      </div>`;
+    document.getElementById("btn-stats-back").onclick = closeStats;
+    return;
+  }
+  if(statsLoading){
+    app.innerHTML = `<div class="topbar"><div class="brand">🐦 Cubirds</div></div><div class="card-panel center"><p class="muted">Carregant estadístiques…</p></div>`;
+    return;
+  }
+  const s = statsData || {};
+  const online = (s.byMode&&s.byMode.online) || {played:0,wins:0};
+  const cpu = (s.byMode&&s.byMode.cpu) || {played:0,wins:0};
+  const hotseat = (s.byMode&&s.byMode.hotseat) || {played:0,wins:0};
+  const totalDecided = (s.wins||0)+(s.losses||0);
+  const winRate = totalDecided>0 ? Math.round(100*(s.wins||0)/totalDecided) : null;
+  const winnersList = (s.hotseatWinners||[]).slice(-8).reverse();
+  app.innerHTML = `
+    <div class="topbar">
+      <div class="brand">🐦 Cubirds</div>
+      <button class="secondary" id="btn-stats-back" style="padding:6px 10px; font-size:13px;">Tornar</button>
+    </div>
+    <div class="card-panel center">
+      <h2>📊 Les teves estadístiques</h2>
+      <p class="muted small">Guardades en aquest dispositiu.</p>
+    </div>
+    <div class="card-panel">
+      <div class="stats-grid">
+        <div class="stat-tile"><div class="stat-num">${s.gamesPlayed||0}</div><div class="stat-lbl">Partides jugades</div></div>
+        <div class="stat-tile"><div class="stat-num">${s.wins||0}</div><div class="stat-lbl">Victòries</div></div>
+        <div class="stat-tile"><div class="stat-num">${s.losses||0}</div><div class="stat-lbl">Derrotes</div></div>
+        <div class="stat-tile"><div class="stat-num">${winRate!=null?winRate+"%":"—"}</div><div class="stat-lbl">% de victòries</div></div>
+        <div class="stat-tile"><div class="stat-num">${s.bestCollectionSize||0}</div><div class="stat-lbl">Millor col·lecció (cartes)</div></div>
+        <div class="stat-tile"><div class="stat-num">${s.bestSpeciesCount||0}</div><div class="stat-lbl">Més espècies en una partida</div></div>
+      </div>
+    </div>
+    <div class="card-panel">
+      <h3>Per tipus de partida</h3>
+      <table class="legend-table">
+        <tr><th>Mode</th><th>Jugades</th><th>Victòries</th><th>% victòries</th></tr>
+                <tr><td>🤖 Contra la màquina</td><td>${cpu.played}</td><td>${cpu.wins}</td><td>${cpu.played? Math.round(100*cpu.wins/cpu.played)+"%":"—"}</td></tr>
+        <tr><td>🪑 Passa i juga</td><td>${hotseat.played}</td><td class="muted small" colspan="2">(partides al mateix dispositiu, sense un "jo" únic)</td></tr>
+      </table>
+    </div>
+    ${winnersList.length? `
+    <div class="card-panel">
+      <h3 class="small">Últims guanyadors en passa i juga</h3>
+      <div class="log-box">${winnersList.map(w=>`<div>• ${esc(w.name)}</div>`).join("")}</div>
+    </div>` : ""}
+  `;
+  document.getElementById("btn-stats-back").onclick = closeStats;
+}
+
+function renderPassScreen(){
+  const app = document.getElementById("app");
+  const d = gameState;
+  const p = d.players.find(x=>x.seat===d.turnSeat);
+  app.innerHTML = `
+    <div class="topbar"><div class="brand">🐦 Cubirds</div><div class="code-chip" style="cursor:default;">🪑 Passa i juga</div></div>
+    <div class="card-panel center" style="margin-top:12vh; padding:36px 20px;">
+      <div style="font-size:48px; line-height:1;">🙈</div>
+      <h2>Passa el dispositiu a</h2>
+      <h2 style="font-size:28px;">${esc(p.name)}</h2>
+      <p class="muted">Els altres jugadors no haurien de mirar la pantalla ara.</p>
+      <div class="row" style="justify-content:center; margin-top:16px;">
+        <button id="btn-reveal">Ja el tinc jo, mostra la partida</button>
+      </div>
+      <div class="row" style="justify-content:center; margin-top:10px;">
+        <button class="secondary" id="btn-leave-pass">Sortir</button>
+      </div>
+    </div>`;
+  document.getElementById("btn-reveal").onclick = ()=>{ hotseatRevealed = true; render(); };
+  document.getElementById("btn-leave-pass").onclick = leaveToHome;
+}
+
+init();
+</script>
+<script>if('serviceWorker' in navigator){addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));}</script>
+</body>
+</html>
