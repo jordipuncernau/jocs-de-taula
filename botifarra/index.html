@@ -1,0 +1,475 @@
+<!doctype html>
+<html lang="ca">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0f3530">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Botifarra">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<title>Botifarra</title>
+<style>
+@font-face{font-family:'Alegreya Sans';font-style:normal;font-weight:400;font-display:swap;src:url(fonts/alegreya-sans-latin-400-normal.woff2) format('woff2')}
+@font-face{font-family:'Alegreya Sans';font-style:normal;font-weight:500;font-display:swap;src:url(fonts/alegreya-sans-latin-500-normal.woff2) format('woff2')}
+@font-face{font-family:'Alegreya Sans';font-style:normal;font-weight:700;font-display:swap;src:url(fonts/alegreya-sans-latin-700-normal.woff2) format('woff2')}
+@font-face{font-family:'Alegreya Sans SC';font-style:normal;font-weight:800;font-display:swap;src:url(fonts/alegreya-sans-sc-latin-800-normal.woff2) format('woff2')}
+/* Una sola ambientació: tapet fosc de cafè, cartes de paper crema. Graella vertical: marcador, trumfo, taula, la teva mà. */
+:root{
+  --felt:#16473f; --felt-deep:#0c2c27; --ink:#f2efe4; --muted:#a6c0b6; --line:rgba(242,239,228,.16);
+  --card:#fbf7ec; --card-ink:#22201b; --accent:#f0b64a; --accent-ink:#2a1c04; --back:#8c3530; --back2:#a3433c;
+  --oros:#b98412; --copes:#c2372b; --espases:#2a5ba6; --bastos:#2d7a3a;
+  --f-ui:'Alegreya Sans',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --f-disp:'Alegreya Sans SC','Alegreya Sans',system-ui,sans-serif;
+  --cw:56px; --ch:82px;
+  color-scheme:dark;
+  padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (min-width:640px) and (min-height:700px){:root{--cw:70px;--ch:102px}}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--felt-deep);background-image:radial-gradient(ellipse 90% 70% at 50% 45%,var(--felt),var(--felt-deep));color:var(--ink);font:16px/1.35 var(--f-ui);
+  padding-left:max(10px,env(safe-area-inset-left,0px));padding-right:max(10px,env(safe-area-inset-right,0px));
+  -webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent;overflow:hidden}
+[hidden]{display:none!important}
+button{font:inherit;color:inherit}
+button:focus-visible,select:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.app{height:100%;max-width:760px;margin:0 auto;display:grid;grid-template-rows:auto auto minmax(0,1fr) auto auto;gap:6px;padding-block:8px}
+
+header{display:flex;align-items:center;gap:10px}
+h1{font:800 1.35rem var(--f-disp);margin:0;letter-spacing:.03em;flex:none}
+.score{flex:1;display:flex;justify-content:center;gap:6px;font-variant-numeric:tabular-nums;min-width:0}
+.team{display:flex;align-items:baseline;gap:6px;padding:3px 10px;border:1px solid var(--line);border-radius:8px;min-width:0}
+.team b{font:800 1.3rem var(--f-disp)}
+.team span{font-size:.8rem;color:var(--muted)}
+.team.us{border-color:color-mix(in srgb,var(--accent) 60%,transparent)}
+.tgt{font-size:.75rem;color:var(--muted);align-self:center;white-space:nowrap}
+.menu-btn{background:none;border:1px solid var(--line);border-radius:8px;padding:6px 10px;cursor:pointer;flex:none}
+
+.bar{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;font-size:.9rem;min-height:30px}
+.trump{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.trump .x{font:800 1rem var(--f-disp);color:var(--accent)}
+.tag{font-size:.75rem;font-weight:700;padding:1px 7px;border-radius:99px;background:var(--accent);color:var(--accent-ink)}
+.by{color:var(--muted);font-size:.82rem}
+.hinfo{color:var(--muted);font-variant-numeric:tabular-nums}
+.linkbtn{background:none;border:0;color:var(--accent);text-decoration:underline;cursor:pointer;padding:0;font-size:.85rem}
+
+.table{position:relative;display:grid;grid-template-columns:64px minmax(0,1fr) 64px;grid-template-rows:auto minmax(0,1fr);grid-template-areas:". n ." "w c e";gap:4px;min-height:0}
+.seat{display:flex;flex-direction:column;align-items:center;gap:4px;position:relative;font-size:.85rem}
+#seat2{grid-area:n} #seat3{grid-area:w;justify-content:center} #seat1{grid-area:e;justify-content:center}
+.seat .nm{font-weight:700;display:flex;align-items:center;gap:4px;white-space:nowrap}
+.seat.turn .nm{color:var(--accent)}
+.seat.turn .nm::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--accent)}
+.chip{font-size:.66rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);border:1px solid var(--line);border-radius:4px;padding:0 4px}
+.backs{display:flex;align-items:center;gap:6px;min-height:42px}
+.back{width:30px;height:42px;border-radius:5px;border:2px solid var(--card);background:repeating-linear-gradient(45deg,var(--back) 0 4px,var(--back2) 4px 8px)}
+.cnt{font-variant-numeric:tabular-nums;color:var(--muted);font-size:.8rem}
+.bubble{background:var(--card);color:var(--card-ink);font-weight:700;font-size:.85rem;padding:3px 9px;border-radius:10px;white-space:nowrap;box-shadow:0 2px 6px rgba(0,0,0,.3);z-index:2}
+#seat1 .bubble,#seat3 .bubble{position:absolute;top:calc(50% + 34px)}
+
+.center{grid-area:c;position:relative;min-height:calc(var(--ch)*2 + 24px)}
+.tc{position:absolute;transition:transform .2s}
+.tc.pos0{left:50%;bottom:0;transform:translateX(-50%)}
+.tc.pos2{left:50%;top:0;transform:translateX(-50%)}
+.tc.pos1{right:2%;top:50%;transform:translateY(-50%) rotate(4deg)}
+.tc.pos3{left:2%;top:50%;transform:translateY(-50%) rotate(-4deg)}
+.tc.win .card{box-shadow:0 0 0 3px var(--accent),0 6px 14px rgba(0,0,0,.4)}
+@media (prefers-reduced-motion:no-preference){.tc .card{animation:drop .22s ease-out}@keyframes drop{from{opacity:.5;transform:scale(.88)}to{opacity:1;transform:none}}}
+
+.card{position:relative;display:block;width:var(--cw);height:var(--ch);background:var(--card);border-radius:8px;border:1px solid rgba(0,0,0,.18);box-shadow:0 1px 0 rgba(0,0,0,.25),0 4px 10px rgba(0,0,0,.3);color:var(--card-ink);flex:none}
+.card .rk{position:absolute;left:5px;top:4px;display:flex;flex-direction:column;align-items:center;font:800 calc(var(--cw)*.3)/1 var(--f-disp)}
+.card .rk i{font:700 calc(var(--cw)*.15)/1 var(--f-ui);font-style:normal;margin-top:2px;opacity:.75}
+.card .rk svg{width:calc(var(--cw)*.3);height:auto;margin-top:3px}
+.card .ic{position:absolute;width:52%;height:auto;right:8%;bottom:8%}
+.card .pv{position:absolute;right:4px;top:4px;min-width:16px;height:16px;padding:0 4px;border-radius:99px;background:var(--card-ink);color:var(--card);font:700 .68rem/16px var(--f-ui);text-align:center}
+.s-o .rk{color:var(--oros)} .s-c .rk{color:var(--copes)} .s-e .rk{color:var(--espases)} .s-b .rk{color:var(--bastos)}
+
+.me{display:flex;align-items:center;justify-content:center;gap:8px;min-height:28px;font-size:.9rem;text-align:center}
+.me .status{color:var(--muted)}
+.me.turn .status{color:var(--accent);font-weight:700}
+.hand{display:flex;justify-content:center;padding-top:14px;padding-bottom:4px;min-width:0}
+.cb{background:none;border:0;padding:0;cursor:default;transition:transform .15s;position:relative}
+.cb.ok{cursor:pointer}
+.cb.ok:hover,.cb.ok:focus-visible{transform:translateY(-12px)}
+.cb.no .card{filter:brightness(.55) saturate(.6)}
+.hand.myturn .cb.ok .card{box-shadow:0 0 0 2px var(--accent),0 4px 10px rgba(0,0,0,.3)}
+
+.sheet{position:absolute;inset:0;display:grid;place-items:center;z-index:5;padding:6px}
+.panel{background:rgba(9,32,28,.94);border:1px solid var(--line);border-radius:14px;padding:16px;width:min(100%,420px);max-height:100%;overflow:auto;display:flex;flex-direction:column;gap:12px;box-shadow:0 12px 40px rgba(0,0,0,.5);-webkit-user-select:text;user-select:text}
+.panel h2{font:800 1.3rem var(--f-disp);margin:0;letter-spacing:.02em;text-wrap:balance}
+.panel p{margin:0;color:var(--muted)}
+.panel p b{color:var(--ink)}
+.opts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.opt{display:flex;align-items:center;gap:10px;background:rgba(242,239,228,.06);border:1px solid var(--line);border-radius:10px;padding:10px;cursor:pointer;font-weight:700;text-align:left}
+.opt:hover{border-color:var(--accent)}
+.opt small{display:block;font-weight:400;color:var(--muted);font-size:.78rem}
+.opt.wide{grid-column:1/-1;justify-content:center}
+.opt .bot{width:28px;height:28px;display:grid;place-items:center;border-radius:50%;background:var(--accent);color:var(--accent-ink);font:800 1rem var(--f-disp)}
+.btn{background:rgba(242,239,228,.08);border:1px solid var(--line);border-radius:10px;padding:10px 14px;cursor:pointer;font-weight:700}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.row{display:flex;gap:8px;flex-wrap:wrap}
+.row .btn{flex:1}
+.res{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
+.res td,.res th{padding:6px 4px;border-bottom:1px solid var(--line);text-align:right}
+.res td:first-child,.res th:first-child{text-align:left}
+.res th{font-size:.75rem;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.06em}
+.form{display:flex;flex-direction:column;gap:10px}
+.form label{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.form select{font:inherit;background:var(--felt-deep);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:5px 8px}
+.form input[type=checkbox]{width:20px;height:20px;accent-color:var(--accent)}
+.rules{display:flex;flex-direction:column;gap:8px;font-size:.95rem}
+.rules h3{margin:6px 0 0;font:800 1rem var(--f-disp);color:var(--accent)}
+.rules ul{margin:0;padding-left:1.1em;display:flex;flex-direction:column;gap:3px}
+.lasttrick{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+.lasttrick .who{font-size:.75rem;text-align:center;color:var(--muted);margin-top:3px}
+.lasttrick .win .card{box-shadow:0 0 0 3px var(--accent)}
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <h1>Botifarra</h1>
+    <div class="score">
+      <div class="team us"><span>Nosaltres</span><b id="s0">0</b></div>
+      <div class="team"><span>Ells</span><b id="s1">0</b></div>
+      <span class="tgt" id="tgt"></span>
+    </div>
+    <button class="menu-btn" data-act="menu" aria-label="Menú">Menú</button>
+  </header>
+  <div class="bar">
+    <div class="trump" id="trump"></div>
+    <div class="row" style="gap:12px;align-items:center"><span class="hinfo" id="hinfo"></span><button class="linkbtn" data-act="last" id="lastbtn" hidden>Última basa</button></div>
+  </div>
+  <div class="table">
+    <div class="seat" id="seat2"></div>
+    <div class="seat" id="seat3"></div>
+    <div class="center" id="trick"></div>
+    <div class="seat" id="seat1"></div>
+    <div class="sheet" id="sheet" hidden><div class="panel" id="panel"></div></div>
+  </div>
+  <div class="me" id="me"></div>
+  <div class="hand" id="hand"></div>
+</div>
+
+<script>
+const $=s=>document.querySelector(s);
+const KEY='botifarra-v1';
+const SUITS=['o','c','e','b'];
+const SN={o:'oros',c:'copes',e:'espases',b:'bastos'};
+const SC={o:'Oros',c:'Copes',e:'Espases',b:'Bastos'};
+const ORDER=[2,3,4,5,6,7,8,10,11,12,1,9];           // de més fluixa a més forta
+const STR=r=>ORDER.indexOf(r);
+const PV={9:5,1:4,12:3,11:2,10:1};
+const pts=c=>PV[c.r]||0;
+const RN={1:'As',9:'Manilla',10:'Sota',11:'Cavall',12:'Rei'};
+const FIG={10:'S',11:'C',12:'R'};
+const NAMES=['Tu','Pep','Anna','Rosa'];              // 0 tu, 1 a la teva dreta, 2 company, 3 a la teva esquerra
+const LEVEL=['','Contro','Recontro','Sant Vicenç'];
+const team=p=>p%2;
+const id=c=>c.s+c.r;
+const cname=c=>(c.r===9?'9':RN[c.r]||c.r)+' de '+SN[c.s];
+let G=null,timer=null,ui={sheet:null,confirmNew:false};
+
+function save(){try{localStorage.setItem(KEY,JSON.stringify(G));}catch(e){}}
+function load(){try{return JSON.parse(localStorage.getItem(KEY));}catch(e){return null;}}
+const D=ms=>ms/((G&&G.opts.speed)||1);
+
+/* ---------- Partida ---------- */
+function newGame(opts){G={opts,score:[0,0],dealer:Math.floor(Math.random()*4),hist:[],over:null,h:null};newHand();}
+function newHand(){
+  const deck=[];SUITS.forEach(s=>{for(let r=1;r<=12;r++)deck.push({s,r});});
+  for(let i=deck.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[deck[i],deck[j]]=[deck[j],deck[i]];}
+  const hands=[[],[],[],[]];deck.forEach((c,i)=>hands[i%4].push(c));
+  hands.forEach(h=>h.sort((a,b)=>SUITS.indexOf(a.s)-SUITS.indexOf(b.s)||STR(b.r)-STR(a.r)));
+  G.h={hands,phase:'choose',chooser:G.dealer,delegated:false,trump:null,contro:0,dblStep:0,ask:false,
+       trick:[],leader:(G.dealer+1)%4,turn:null,pts:[0,0],tricks:[0,0],played:[],last:null,say:{},n:0,result:null};
+  ui.sheet=null;save();step();
+}
+function mult(){const h=G.h;return (h.trump==='bot'?2:1)*[1,2,4,8][h.contro];}
+
+function beats(a,b,T){const ta=T!=='bot'&&a.s===T,tb=T!=='bot'&&b.s===T;if(ta!==tb)return ta;return a.s===b.s&&STR(a.r)>STR(b.r);}
+function winnerOf(tr,T){let w=0;for(let i=1;i<tr.length;i++)if(beats(tr[i].c,tr[w].c,T))w=i;return w;}
+
+function legal(p){
+  const h=G.h,hand=h.hands[p],tr=h.trick,T=h.trump;
+  if(!tr.length)return hand.slice();
+  const lead=tr[0].c.s,w=tr[winnerOf(tr,T)],mate=team(w.p)===team(p);
+  const same=hand.filter(c=>c.s===lead);
+  if(same.length){
+    if(mate)return same;
+    if(w.c.s===lead){const hi=same.filter(c=>STR(c.r)>STR(w.c.r));return hi.length?hi:same;}
+    return same;
+  }
+  if(mate||T==='bot')return hand.slice();
+  const trs=hand.filter(c=>c.s===T);
+  if(!trs.length)return hand.slice();
+  if(w.c.s===T){const ov=trs.filter(c=>STR(c.r)>STR(w.c.r));return ov.length?ov:hand.slice();}
+  return trs;
+}
+
+/* ---------- Flux ---------- */
+function step(){
+  clearTimeout(timer);render();
+  const h=G.h;if(G.over!==null&&h.phase==='end')return;
+  if(h.phase==='choose'){if(h.chooser!==0)timer=setTimeout(()=>aiChoose(h.chooser),D(1100));}
+  else if(h.phase==='dbl')stepDbl();
+  else if(h.phase==='play'){
+    if(h.trick.length===4)timer=setTimeout(resolveTrick,D(1200));
+    else if(h.turn!==0)timer=setTimeout(()=>play(h.turn,aiCard(h.turn)),D(h.trick.length?750:950));
+  }
+}
+function delegate(p){const h=G.h;h.delegated=true;h.chooser=(p+2)%4;h.say[p]='Delego';save();step();}
+function choose(p,T){const h=G.h;h.trump=T;h.say[p]=T==='bot'?'Botifarra!':SC[T];
+  if(G.opts.contro){h.phase='dbl';h.dblStep=1;h.ask=false;}else startPlay();save();step();}
+function dblTeam(){const h=G.h;return h.dblStep%2?1-team(h.chooser):team(h.chooser);}
+function stepDbl(){
+  const h=G.h;if(h.ask)return;
+  timer=setTimeout(()=>{
+    const tm=dblTeam(),mem=tm===0?[2]:[1,3];
+    const p=mem.slice().sort((a,b)=>strength(b)-strength(a))[0];
+    if(aiDouble(p,h.dblStep))return resolveDbl(true,p);
+    if(tm===0){h.ask=true;save();render();return;}
+    resolveDbl(false,p);
+  },D(900));
+}
+function resolveDbl(yes,p){
+  const h=G.h;h.ask=false;
+  if(yes){h.contro=h.dblStep;h.say[p]=LEVEL[h.dblStep]+'!';
+    if(h.dblStep<(G.opts.sv?3:2)){h.dblStep++;save();step();return;}}
+  else h.say[p]='Passo';
+  startPlay();save();step();
+}
+function startPlay(){const h=G.h;h.phase='play';h.turn=h.leader;}
+function play(p,c){
+  const h=G.h,i=h.hands[p].findIndex(x=>x.s===c.s&&x.r===c.r);if(i<0)return;
+  if(h.trick.length===0&&h.n===0)h.say={};
+  h.hands[p].splice(i,1);h.trick.push({p,c});h.played.push(id(c));h.turn=(p+1)%4;save();step();
+}
+function resolveTrick(){
+  const h=G.h,w=h.trick[winnerOf(h.trick,h.trump)].p,v=h.trick.reduce((a,x)=>a+pts(x.c),0)+1;
+  h.pts[team(w)]+=v;h.tricks[team(w)]++;h.last={trick:h.trick,w,v};h.trick=[];h.leader=h.turn=w;h.n++;h.say={};
+  if(h.n===12)endHand();save();step();
+}
+function endHand(){
+  const h=G.h,m=mult();let tm=null,raw=0;
+  if(h.pts[0]>36){tm=0;raw=h.pts[0]-36;}else if(h.pts[1]>36){tm=1;raw=h.pts[1]-36;}
+  const gained=raw*m;if(tm!==null)G.score[tm]+=gained;
+  h.result={team:tm,raw,m,gained};h.phase='end';
+  G.hist.push({t:h.trump,c:h.contro,by:h.chooser,p:h.pts.slice(),team:tm,g:gained});
+  if(G.score[0]>=G.opts.target)G.over=0;else if(G.score[1]>=G.opts.target)G.over=1;
+}
+function nextHand(){G.dealer=(G.dealer+1)%4;newHand();}
+
+/* ---------- Rivals i company (IA) ---------- */
+function unseen(p){const h=G.h,seen=new Set([...h.played,...h.hands[p].map(id)]),out=[];
+  SUITS.forEach(s=>{for(let r=1;r<=12;r++)if(!seen.has(s+r))out.push({s,r});});return out;}
+function isMaster(c,p){return !unseen(p).some(u=>u.s===c.s&&STR(u.r)>STR(c.r));}
+function strength(p){
+  const h=G.h,hand=h.hands[p];let s=hand.reduce((a,c)=>a+pts(c),0);
+  if(h.trump&&h.trump!=='bot'){const tr=hand.filter(c=>c.s===h.trump);s+=tr.length*3+(tr.some(c=>c.r===9)?4:0)+(tr.some(c=>c.r===1)?2:0);}
+  else if(h.trump==='bot')s+=hand.filter(c=>c.r===9).length*4;
+  return s;
+}
+function aiDouble(p,st){return strength(p)>=[0,34,40,46][st];}
+function aiChoose(p){
+  const h=G.h,hand=h.hands[p];let best='o',bs=-1;
+  SUITS.forEach(s=>{const cs=hand.filter(c=>c.s===s);let sc=cs.length*3+cs.reduce((a,c)=>a+pts(c),0);
+    if(cs.some(c=>c.r===9))sc+=3;if(cs.some(c=>c.r===9)&&cs.some(c=>c.r===1))sc+=2;if(sc>bs){bs=sc;best=s;}});
+  let bot=0;SUITS.forEach(s=>{const cs=hand.filter(c=>c.s===s);if(cs.some(c=>c.r===9)){bot+=5;if(cs.some(c=>c.r===1))bot+=4;bot+=Math.max(0,cs.length-3);}});
+  if(bot>=22&&bot>bs)return choose(p,'bot');
+  if(!h.delegated&&p===G.dealer&&bs<17)return delegate(p);
+  choose(p,best);
+}
+function aiCard(p){
+  const h=G.h,L=legal(p),T=h.trump,tr=h.trick,hand=h.hands[p];
+  const isT=c=>T!=='bot'&&c.s===T?1:0;
+  const low=a=>a.slice().sort((x,y)=>pts(x)-pts(y)||isT(x)-isT(y)||STR(x.r)-STR(y.r))[0];
+  if(!tr.length){
+    const myT=T!=='bot'?hand.filter(c=>c.s===T).length:0;
+    const tm=L.filter(c=>isT(c)&&isMaster(c,p));
+    if(team(p)===team(h.chooser)&&myT>=4&&tm.length)return tm[0];
+    const ms=L.filter(c=>!isT(c)&&isMaster(c,p)&&pts(c)>0);
+    if(ms.length)return ms.sort((a,b)=>pts(b)-pts(a))[0];
+    const nonT=L.filter(c=>!isT(c)),pool=nonT.length?nonT:L,safe=pool.filter(c=>pts(c)===0);
+    return low(safe.length?safe:pool);
+  }
+  const w=tr[winnerOf(tr,T)],mate=team(w.p)===team(p),last=tr.length===3;
+  const wins=L.filter(c=>winnerOf([...tr,{p,c}],T)===tr.length);
+  if(mate){
+    if(last||isMaster(w.c,p)){
+      const give=L.filter(c=>!isT(c)&&!(isMaster(c,p)&&pts(c)>=3));
+      const pool=give.length?give:L;return pool.slice().sort((a,b)=>pts(b)-pts(a)||STR(a.r)-STR(b.r))[0];
+    }
+    return low(L);
+  }
+  if(wins.length){
+    if(last)return wins.slice().sort((a,b)=>isT(a)-isT(b)||STR(a.r)-STR(b.r))[0];
+    const m=wins.filter(c=>isMaster(c,p));
+    if(m.length)return m.sort((a,b)=>isT(a)-isT(b)||STR(a.r)-STR(b.r))[0];
+    if(tr.reduce((a,x)=>a+pts(x.c),0)>=2)return wins.slice().sort((a,b)=>STR(b.r)-STR(a.r))[0];
+  }
+  return low(L);
+}
+
+/* ---------- Dibuix ---------- */
+function icon(s,size,cls){
+  const f=`style="fill:var(--${SN[s]})"`,w='style="fill:rgba(255,255,255,.55)"';
+  const P={
+    o:`<circle cx="12" cy="12" r="9.5" ${f}/><circle cx="12" cy="12" r="6" fill="none" stroke="rgba(255,255,255,.55)" stroke-width="1.5"/><circle cx="12" cy="12" r="2" ${w}/>`,
+    c:`<path d="M4.5 3h15c0 5.6-2.8 9-6.2 9.6V18h3.7v3h-10v-3h3.7v-5.4C7.3 12 4.5 8.6 4.5 3z" ${f}/>`,
+    e:`<path d="M12 1l2.2 3.2V15H9.8V4.2z" ${f}/><rect x="6" y="15" width="12" height="2.2" rx="1" ${f}/><rect x="10.9" y="17" width="2.2" height="4" ${f}/><circle cx="12" cy="22" r="1.6" ${f}/>`,
+    b:`<g transform="rotate(-25 12 12)"><path d="M10 22.5c-1 0-1.6-.7-1.5-1.6L9.6 4.2C9.8 2.4 10.8 1.5 12.2 1.5s2.5 1 2.3 2.8l-1.8 16.6c-.1.9-.8 1.6-1.7 1.6z" ${f}/><circle cx="10.6" cy="9" r="1.3" ${w}/><circle cx="11.6" cy="14.5" r="1.1" ${w}/></g>`};
+  return `<svg class="${cls||''}" viewBox="0 0 24 24" ${size?`width="${size}" height="${size}"`:''} aria-hidden="true">${P[s]}</svg>`;
+}
+function cardHTML(c){
+  return `<span class="card s-${c.s}"><span class="rk">${c.r}${FIG[c.r]?`<i>${FIG[c.r]}</i>`:''}${icon(c.s)}</span>${G.opts.showPts&&pts(c)?`<span class="pv">${pts(c)}</span>`:''}${icon(c.s,0,'ic')}</span>`;
+}
+function trumpLabel(T,size){return T==='bot'?'<b>Botifarra</b>':`${icon(T,size||18)} <b>${SC[T]}</b>`;}
+
+function render(){
+  const h=G.h;
+  $('#s0').textContent=G.score[0];$('#s1').textContent=G.score[1];$('#tgt').textContent='a '+G.opts.target;
+  $('#trump').innerHTML=h.trump?`${trumpLabel(h.trump)} <span class="x">×${mult()}</span>${h.contro?`<span class="tag">${LEVEL[h.contro]}</span>`:''}<span class="by">· ${h.chooser===0?'tu':NAMES[h.chooser]}</span>`
+    :`<span class="by">${NAMES[G.dealer]==='Tu'?'Reparteixes tu':'Reparteix '+NAMES[G.dealer]}</span>`;
+  $('#hinfo').textContent=(h.phase==='play'||h.phase==='end')?`Basa ${Math.min(h.n+1,12)}/12 · ${h.pts[0]}–${h.pts[1]}`:'';
+  $('#lastbtn').hidden=!h.last;
+  [1,2,3].forEach(p=>{
+    const el=$('#seat'+p);
+    el.innerHTML=`<div class="nm">${NAMES[p]}${p===G.dealer?' <span class="chip">reparteix</span>':''}</div>
+      <div class="backs">${h.hands[p].length?`<span class="back"></span><span class="cnt">${h.hands[p].length}</span>`:''}</div>
+      ${h.say[p]?`<div class="bubble">${h.say[p]}</div>`:''}`;
+    el.classList.toggle('turn',h.phase==='play'&&h.turn===p&&h.trick.length<4);
+  });
+  const wi=h.trick.length===4?winnerOf(h.trick,h.trump):-1;
+  $('#trick').innerHTML=h.trick.map((x,i)=>`<div class="tc pos${x.p}${i===wi?' win':''}">${cardHTML(x.c)}</div>`).join('');
+  const my=h.phase==='play'&&h.turn===0&&h.trick.length<4,L=my?new Set(legal(0).map(id)):new Set();
+  $('#hand').classList.toggle('myturn',my);
+  $('#hand').innerHTML=h.hands[0].map(c=>`<button class="cb${my&&L.has(id(c))?' ok':''}${my&&!L.has(id(c))?' no':''}" data-c="${id(c)}" aria-label="${cname(c)}" ${my&&L.has(id(c))?'':'tabindex="-1"'}>${cardHTML(c)}</button>`).join('');
+  $('#me').className='me'+(my?' turn':'');
+  $('#me').innerHTML=`${G.dealer===0?'<span class="chip">reparteix</span>':''}<span class="status">${status()}</span>${h.say[0]?`<span class="bubble">${h.say[0]}</span>`:''}`;
+  layoutHand();renderSheet();
+}
+function status(){
+  const h=G.h;
+  if(h.phase==='choose')return h.chooser===0?'Et toca fer trumfo':`${NAMES[h.chooser]} pensa el trumfo…`;
+  if(h.phase==='dbl')return h.ask?'Decideix si vols '+LEVEL[h.dblStep].toLowerCase():'…';
+  if(h.phase==='play'){
+    if(h.trick.length===4){const w=h.trick[winnerOf(h.trick,h.trump)].p;return w===0?'Guanyes la basa':`${NAMES[w]} guanya la basa`;}
+    if(h.turn===0)return h.trick.length?'Et toca. Les cartes enfosquides no es poden jugar.':'Et toca sortir';
+    return `Juga ${NAMES[h.turn]}…`;
+  }
+  return 'Mà acabada';
+}
+function layoutHand(){
+  const el=$('#hand'),n=el.children.length;if(!n)return;
+  const cw=el.children[0].offsetWidth,W=el.clientWidth,stp=n>1?Math.min(cw+6,(W-cw)/(n-1)):0;
+  [...el.children].forEach((c,i)=>{c.style.marginLeft=i?(stp-cw)+'px':'0';});
+}
+
+function renderSheet(){
+  const h=G.h;let html='';
+  if(ui.sheet==='menu')html=menuHTML();
+  else if(ui.sheet==='rules')html=rulesHTML();
+  else if(ui.sheet==='last'&&h.last)html=lastHTML();
+  else if(h.phase==='choose'&&h.chooser===0){
+    const del=!h.delegated&&G.dealer===0;
+    html=`<h2>Fes trumfo</h2><p>${h.delegated?'L\'Anna t\'ha delegat el trumfo.':'Mira la teva mà i tria el pal de trumfo.'}</p>
+     <div class="opts">${SUITS.map(s=>`<button class="opt" data-tr="${s}">${icon(s,28)}<span>${SC[s]}<small>${h.hands[0].filter(c=>c.s===s).length} cartes</small></span></button>`).join('')}
+     <button class="opt wide" data-tr="bot"><span class="bot">B</span><span>Botifarra<small>Sense trumfo · val el doble</small></span></button>
+     ${del?`<button class="opt wide" data-tr="del">Delego a l'Anna</button>`:''}</div>`;
+  }
+  else if(h.phase==='dbl'&&h.ask){
+    const st=h.dblStep,nx=(h.trump==='bot'?2:1)*[1,2,4,8][st];
+    const ctx=st===1?`${h.chooser===0?'Has':NAMES[h.chooser]+' ha'} fet ${h.trump==='bot'?'botifarra':SC[h.trump].toLowerCase()}.`:`Ells han dit ${LEVEL[st-1].toLowerCase()}.`;
+    html=`<h2>${LEVEL[st]}?</h2><p>${ctx} Si dius ${LEVEL[st].toLowerCase()}, la mà val <b>×${nx}</b>.</p>
+     <div class="row"><button class="btn primary" data-dbl="1">${LEVEL[st]}</button><button class="btn" data-dbl="0">Passo</button></div>`;
+  }
+  else if(h.phase==='end'){
+    const r=h.result;
+    const head=r.team===null?'Empat a 36':r.team===0?'Guanyeu la mà':'Guanyen ells';
+    html=`<h2>${head}</h2>
+     <table class="res"><tr><th></th><th>Punts</th><th>Bases</th></tr>
+     <tr><td>Nosaltres</td><td>${h.pts[0]}</td><td>${h.tricks[0]}</td></tr><tr><td>Ells</td><td>${h.pts[1]}</td><td>${h.tricks[1]}</td></tr></table>
+     <p>${r.team===null?'Ningú no passa de 36: la mà no puntua.':`${r.raw} per sobre de 36 × ${r.m} = <b>${r.gained} punts</b> per a ${r.team===0?'vosaltres':'ells'}.`}</p>
+     ${G.over!==null?`<p><b>${G.over===0?'Heu guanyat la partida':'Han guanyat la partida'} ${G.score[0]} a ${G.score[1]}.</b></p><button class="btn primary" data-act="newsame">Partida nova</button>`
+       :`<button class="btn primary" data-act="next">Següent mà</button>`}`;
+  }
+  $('#sheet').hidden=!html;if(html)$('#panel').innerHTML=html;
+}
+function menuHTML(){
+  const o=G.opts;
+  return `<h2>Menú</h2>
+   <div class="form">
+    <label for="o-speed">Velocitat dels altres<select id="o-speed"><option value="1"${o.speed==1?' selected':''}>Normal</option><option value="2"${o.speed==2?' selected':''}>Ràpida</option><option value="0.6"${o.speed==0.6?' selected':''}>Lenta</option></select></label>
+    <label for="o-pts">Mostra el valor de les cartes<input type="checkbox" id="o-pts"${o.showPts?' checked':''}></label>
+   </div>
+   ${G.hist.length?`<table class="res"><tr><th>Mà</th><th>Trumfo</th><th>Punts</th><th>Puntua</th></tr>${G.hist.map((x,i)=>`<tr><td>${i+1}</td><td>${x.t==='bot'?'Botifarra':SC[x.t]}${x.c?' · '+LEVEL[x.c]:''}</td><td>${x.p[0]}–${x.p[1]}</td><td>${x.team===null?'—':(x.team===0?'Nosaltres ':'Ells ')+'+'+x.g}</td></tr>`).join('')}</table>`:''}
+   <h2 style="font-size:1.05rem">Partida nova</h2>
+   <div class="form">
+    <label for="n-target">Partida a<select id="n-target">${[51,101,151].map(v=>`<option${o.target==v?' selected':''}>${v}</option>`).join('')}</select></label>
+    <label for="n-contro">Contro i recontro<input type="checkbox" id="n-contro"${o.contro?' checked':''}></label>
+    <label for="n-sv">Sant Vicenç<input type="checkbox" id="n-sv"${o.sv?' checked':''}></label>
+   </div>
+   ${ui.confirmNew?`<p>La partida actual es perdrà.</p><div class="row"><button class="btn primary" data-act="newyes">Sí, comença-la</button><button class="btn" data-act="newno">Cancel·la</button></div>`
+     :`<button class="btn" data-act="new">Comença una partida nova</button>`}
+   <div class="row"><button class="btn" data-act="rules">Regles</button><button class="btn primary" data-act="close">Torna al joc</button></div>`;
+}
+function rulesHTML(){
+  return `<h2>Regles</h2><div class="rules">
+   <p>Quatre jugadors en parelles: tu i l'Anna contra en Pep i la Rosa. Baralla espanyola de 48 cartes, 12 per jugador. Es juga cap a la dreta.</p>
+   <h3>Valor de les cartes</h3>
+   <ul><li>Ordre de més a menys: 9 (manilla), as, rei, cavall, sota, 8, 7… 2.</li><li>Punts: manilla 5, as 4, rei 3, cavall 2, sota 1. Cada basa suma 1 punt més.</li><li>En total hi ha 72 punts. Puntua la parella que en fa més de 36.</li></ul>
+   <h3>Trumfo</h3>
+   <ul><li>Qui reparteix fa trumfo o el delega al company.</li><li>Botifarra vol dir jugar sense trumfo; la mà val el doble.</li><li>Els rivals poden dir contro (×2); la parella del trumfo, recontro (×4); i els rivals, Sant Vicenç (×8).</li></ul>
+   <h3>Com s'ha de jugar</h3>
+   <ul><li>Cal servir el pal que ha sortit.</li><li>Si la basa la guanya un rival amb aquest pal, l'has de superar si pots.</li><li>Si no tens el pal i guanya un rival, has de fallar (tirar trumfo) i, si ja hi ha trumfo, superar-lo si pots.</li><li>Si la basa la guanya el teu company, només has de servir; si no tens el pal, pots tirar qualsevol carta.</li></ul>
+   <h3>Puntuació</h3>
+   <ul><li>Es compten els punts per sobre de 36 i es multipliquen pel valor de la mà.</li><li>Guanya la parella que arriba primer als punts de la partida.</li></ul>
+   <p>Les regles de la botifarra canvien una mica segons el lloc. Aquí hi ha les més esteses.</p></div>
+   <button class="btn primary" data-act="${G.h.phase==='end'||!ui.fromMenu?'close':'menu'}">Tanca</button>`;
+}
+function lastHTML(){
+  const l=G.h.last,wi=l.trick.findIndex(x=>x.p===l.w);
+  return `<h2>Última basa</h2><div class="lasttrick">${l.trick.map((x,i)=>`<div class="${i===wi?'win':''}">${cardHTML(x.c)}<div class="who">${NAMES[x.p]}</div></div>`).join('')}</div>
+   <p>${l.w===0?'La vas guanyar tu':'La va guanyar '+NAMES[l.w]}: ${l.v} punt${l.v===1?'':'s'}.</p><button class="btn primary" data-act="close">Tanca</button>`;
+}
+
+/* ---------- Entrada ---------- */
+document.addEventListener('click',e=>{
+  const b=e.target.closest('button');if(!b)return;const h=G.h;
+  if(b.dataset.c){
+    if(h.phase!=='play'||h.turn!==0||h.trick.length>=4||ui.sheet)return;
+    const c=h.hands[0].find(x=>id(x)===b.dataset.c);
+    if(c&&legal(0).some(x=>id(x)===id(c)))play(0,c);
+    return;
+  }
+  if(b.dataset.tr){if(b.dataset.tr==='del')delegate(0);else choose(0,b.dataset.tr);return;}
+  if(b.dataset.dbl){resolveDbl(b.dataset.dbl==='1',0);return;}
+  const a=b.dataset.act;
+  if(a==='menu'){ui.sheet='menu';ui.confirmNew=false;ui.fromMenu=true;render();}
+  else if(a==='close'){ui.sheet=null;ui.fromMenu=false;render();}
+  else if(a==='rules'){ui.sheet='rules';render();}
+  else if(a==='last'){ui.sheet='last';ui.fromMenu=false;render();}
+  else if(a==='new'){ui.confirmNew=true;render();}
+  else if(a==='newno'){ui.confirmNew=false;render();}
+  else if(a==='newyes'){const o=Object.assign({},G.opts,{target:+$('#n-target').value,contro:$('#n-contro').checked,sv:$('#n-sv').checked});ui.sheet=null;ui.confirmNew=false;newGame(o);}
+  else if(a==='newsame'){newGame(G.opts);}
+  else if(a==='next'){nextHand();}
+});
+document.addEventListener('change',e=>{
+  const t=e.target;
+  if(t.id==='o-speed'){G.opts.speed=+t.value;save();}
+  else if(t.id==='o-pts'){G.opts.showPts=t.checked;save();render();}
+});
+addEventListener('resize',layoutHand);
+
+const saved=load();
+if(saved&&saved.h&&saved.opts){G=saved;step();}
+else newGame({target:101,contro:true,sv:true,speed:1,showPts:true});
+</script>
+<script>if('serviceWorker' in navigator){addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));}</script>
+</body>
+</html>
