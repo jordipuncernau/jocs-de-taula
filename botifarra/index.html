@@ -37,7 +37,7 @@ body{margin:0;background:var(--felt-deep);background-image:radial-gradient(ellip
 [hidden]{display:none!important}
 button{font:inherit;color:inherit}
 button:focus-visible,select:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
-.app{height:100%;max-width:760px;margin:0 auto;display:grid;grid-template-rows:auto auto minmax(0,1fr) auto auto;gap:6px;padding-block:8px}
+.app{height:100%;max-width:760px;margin:0 auto;display:grid;grid-template-rows:auto auto minmax(0,1fr) auto auto auto;gap:6px;padding-block:8px}
 
 header{display:flex;align-items:center;gap:10px}
 h1{font:800 1.35rem var(--f-disp);margin:0;letter-spacing:.03em;flex:none}
@@ -48,6 +48,8 @@ h1{font:800 1.35rem var(--f-disp);margin:0;letter-spacing:.03em;flex:none}
 .team.us{border-color:color-mix(in srgb,var(--accent) 60%,transparent)}
 .tgt{font-size:.75rem;color:var(--muted);align-self:center;white-space:nowrap}
 .menu-btn{background:none;border:1px solid var(--line);border-radius:8px;padding:6px 10px;cursor:pointer;flex:none}
+.menu-btn.learn{border-color:var(--accent);color:var(--accent)}
+@media (max-width:420px){h1{font-size:1.1rem}.team{padding:3px 7px}.tgt{display:none}}
 
 .bar{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;font-size:.9rem;min-height:30px}
 .trump{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
@@ -126,6 +128,26 @@ h1{font:800 1.35rem var(--f-disp);margin:0;letter-spacing:.03em;flex:none}
 .lasttrick{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
 .lasttrick .who{font-size:.75rem;text-align:center;color:var(--muted);margin-top:3px}
 .lasttrick .win .card{box-shadow:0 0 0 3px var(--accent)}
+.help{display:flex;gap:10px;align-items:flex-start;background:rgba(240,182,74,.1);border:1px solid rgba(240,182,74,.35);border-radius:10px;padding:7px 10px;font-size:.88rem;line-height:1.3}
+.help p{margin:0;flex:1;min-width:0}
+.help .linkbtn{flex:none}
+.cb.sug{transform:translateY(-14px)}
+.cb.sug .card{box-shadow:0 0 0 3px #fff,0 0 0 6px var(--accent),0 6px 14px rgba(0,0,0,.4)!important}
+.mini{--cw:38px;--ch:56px}
+.mini .card .rk svg{display:none}
+.mini .card .pv{min-width:14px;height:14px;font-size:.6rem;line-height:14px}
+.cards{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;align-items:flex-end}
+.cards .lbl{font-size:.72rem;color:var(--muted);text-align:center;margin-top:3px}
+.cards .win .card{box-shadow:0 0 0 3px var(--accent)}
+.key{border-left:3px solid var(--accent);padding:6px 10px;background:rgba(242,239,228,.05);border-radius:0 8px 8px 0;font-size:.92rem}
+.tut ul{margin:0;padding-left:1.1em;display:flex;flex-direction:column;gap:4px;color:var(--ink)}
+.tut p{color:var(--ink)}
+.dots{display:flex;gap:5px;justify-content:center}
+.dots i{width:7px;height:7px;border-radius:50%;background:var(--line)}
+.dots i.on{background:var(--accent)}
+.pts{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
+.pts td{padding:4px 6px;border-bottom:1px solid var(--line)}
+.pts td:last-child{text-align:right;font-weight:700}
 </style>
 </head>
 <body>
@@ -137,6 +159,7 @@ h1{font:800 1.35rem var(--f-disp);margin:0;letter-spacing:.03em;flex:none}
       <div class="team"><span>Ells</span><b id="s1">0</b></div>
       <span class="tgt" id="tgt"></span>
     </div>
+    <button class="menu-btn learn" data-act="tut">Aprèn</button>
     <button class="menu-btn" data-act="menu" aria-label="Menú">Menú</button>
   </header>
   <div class="bar">
@@ -150,6 +173,7 @@ h1{font:800 1.35rem var(--f-disp);margin:0;letter-spacing:.03em;flex:none}
     <div class="seat" id="seat1"></div>
     <div class="sheet" id="sheet" hidden><div class="panel" id="panel"></div></div>
   </div>
+  <div class="help" id="help" hidden></div>
   <div class="me" id="me"></div>
   <div class="hand" id="hand"></div>
 </div>
@@ -213,6 +237,7 @@ function legal(p){
 /* ---------- Flux ---------- */
 function step(){
   clearTimeout(timer);render();
+  if(ui.sheet&&ui.sheet!=='last')return;
   const h=G.h;if(G.over!==null&&h.phase==='end')return;
   if(h.phase==='choose'){if(h.chooser!==0)timer=setTimeout(()=>aiChoose(h.chooser),D(1100));}
   else if(h.phase==='dbl')stepDbl();
@@ -246,7 +271,7 @@ function startPlay(){const h=G.h;h.phase='play';h.turn=h.leader;}
 function play(p,c){
   const h=G.h,i=h.hands[p].findIndex(x=>x.s===c.s&&x.r===c.r);if(i<0)return;
   if(h.trick.length===0&&h.n===0)h.say={};
-  h.hands[p].splice(i,1);h.trick.push({p,c});h.played.push(id(c));h.turn=(p+1)%4;save();step();
+  if(p===0)ui.sug=null;h.hands[p].splice(i,1);h.trick.push({p,c});h.played.push(id(c));h.turn=(p+1)%4;save();step();
 }
 function resolveTrick(){
   const h=G.h,w=h.trick[winnerOf(h.trick,h.trump)].p,v=h.trick.reduce((a,x)=>a+pts(x.c),0)+1;
@@ -274,44 +299,67 @@ function strength(p){
   return s;
 }
 function aiDouble(p,st){return strength(p)>=[0,34,40,46][st];}
-function aiChoose(p){
+function chooseDecision(p){
   const h=G.h,hand=h.hands[p];let best='o',bs=-1;
-  SUITS.forEach(s=>{const cs=hand.filter(c=>c.s===s);let sc=cs.length*3+cs.reduce((a,c)=>a+pts(c),0);
-    if(cs.some(c=>c.r===9))sc+=3;if(cs.some(c=>c.r===9)&&cs.some(c=>c.r===1))sc+=2;if(sc>bs){bs=sc;best=s;}});
-  let bot=0;SUITS.forEach(s=>{const cs=hand.filter(c=>c.s===s);if(cs.some(c=>c.r===9)){bot+=5;if(cs.some(c=>c.r===1))bot+=4;bot+=Math.max(0,cs.length-3);}});
-  if(bot>=22&&bot>bs)return choose(p,'bot');
-  if(!h.delegated&&p===G.dealer&&bs<17)return delegate(p);
-  choose(p,best);
+  SUITS.forEach(x=>{const cs=hand.filter(c=>c.s===x);let sc=cs.length*3+cs.reduce((a,c)=>a+pts(c),0);
+    if(cs.some(c=>c.r===9))sc+=3;if(cs.some(c=>c.r===9)&&cs.some(c=>c.r===1))sc+=2;if(sc>bs){bs=sc;best=x;}});
+  let bot=0;SUITS.forEach(x=>{const cs=hand.filter(c=>c.s===x);if(cs.some(c=>c.r===9)){bot+=5;if(cs.some(c=>c.r===1))bot+=4;bot+=Math.max(0,cs.length-3);}});
+  const nines=hand.filter(c=>c.r===9).length;
+  if(bot>=22&&bot>bs)return{a:'bot',why:`Tens ${nines} manilles i cartes altes a diversos pals: és mà de botifarra.`};
+  if(!h.delegated&&p===G.dealer&&bs<17)return{a:'del',why:'No tens cap pal prou fort. Delegar deixa triar el company, que pot tenir més joc.'};
+  const cs=hand.filter(c=>c.s===best),hon=[cs.some(c=>c.r===9)?'la manilla':'',cs.some(c=>c.r===1)?'l\'as':''].filter(Boolean);
+  return{a:best,why:`${SC[best]} és el teu pal més fort: ${cs.length} cartes${hon.length?' i hi tens '+hon.join(' i '):''}.`};
 }
+function aiChoose(p){const d=chooseDecision(p);if(d.a==='del')delegate(p);else choose(p,d.a);}
+let WHY='';
 function aiCard(p){
   const h=G.h,L=legal(p),T=h.trump,tr=h.trick,hand=h.hands[p];
   const isT=c=>T!=='bot'&&c.s===T?1:0;
   const low=a=>a.slice().sort((x,y)=>pts(x)-pts(y)||isT(x)-isT(y)||STR(x.r)-STR(y.r))[0];
+  const R=(c,w)=>{WHY=w;return c;};
   if(!tr.length){
     const myT=T!=='bot'?hand.filter(c=>c.s===T).length:0;
     const tm=L.filter(c=>isT(c)&&isMaster(c,p));
-    if(team(p)===team(h.chooser)&&myT>=4&&tm.length)return tm[0];
+    if(team(p)===team(h.chooser)&&myT>=4&&tm.length)return R(tm[0],'Teniu el trumfo i en tens molts: surt de trumfo per buidar els dels rivals.');
     const ms=L.filter(c=>!isT(c)&&isMaster(c,p)&&pts(c)>0);
-    if(ms.length)return ms.sort((a,b)=>pts(b)-pts(a))[0];
+    if(ms.length)return R(ms.sort((a,b)=>pts(b)-pts(a))[0],'És la carta més alta que queda d\'aquest pal: guanyarà la basa si ningú no falla.');
     const nonT=L.filter(c=>!isT(c)),pool=nonT.length?nonT:L,safe=pool.filter(c=>pts(c)===0);
-    return low(safe.length?safe:pool);
+    return R(low(safe.length?safe:pool),'Surt amb una carta baixa i sense punts: no regales res i veus què tenen els altres.');
   }
   const w=tr[winnerOf(tr,T)],mate=team(w.p)===team(p),last=tr.length===3;
   const wins=L.filter(c=>winnerOf([...tr,{p,c}],T)===tr.length);
   if(mate){
     if(last||isMaster(w.c,p)){
       const give=L.filter(c=>!isT(c)&&!(isMaster(c,p)&&pts(c)>=3));
-      const pool=give.length?give:L;return pool.slice().sort((a,b)=>pts(b)-pts(a)||STR(a.r)-STR(b.r))[0];
+      const pool=give.length?give:L,c=pool.slice().sort((a,b)=>pts(b)-pts(a)||STR(a.r)-STR(b.r))[0];
+      return R(c,pts(c)?'El company té la basa segura: carrega-hi punts.':'El company guanya: tira la carta que menys et faci falta.');
     }
-    return low(L);
+    return R(low(L),'El company guanya de moment, però no és segur: no hi posis punts.');
   }
   if(wins.length){
-    if(last)return wins.slice().sort((a,b)=>isT(a)-isT(b)||STR(a.r)-STR(b.r))[0];
+    if(last)return R(wins.slice().sort((a,b)=>isT(a)-isT(b)||STR(a.r)-STR(b.r))[0],'Ets l\'últim: guanya la basa amb la carta més baixa que la mati.');
     const m=wins.filter(c=>isMaster(c,p));
-    if(m.length)return m.sort((a,b)=>isT(a)-isT(b)||STR(a.r)-STR(b.r))[0];
-    if(tr.reduce((a,x)=>a+pts(x.c),0)>=2)return wins.slice().sort((a,b)=>STR(b.r)-STR(a.r))[0];
+    if(m.length)return R(m.sort((a,b)=>isT(a)-isT(b)||STR(a.r)-STR(b.r))[0],'Aquesta carta guanya i ja no queda cap carta més alta del pal.');
+    if(tr.reduce((a,x)=>a+pts(x.c),0)>=2)return R(wins.slice().sort((a,b)=>STR(b.r)-STR(a.r))[0],'Hi ha punts a la basa: intenta guanyar-la amb força.');
   }
-  return low(L);
+  return R(low(L),wins.length?'La basa té pocs punts i et podrien superar: guarda les cartes bones.':'No pots guanyar la basa: tira la carta amb menys punts.');
+}
+function explain(){
+  const h=G.h,tr=h.trick,T=h.trump;
+  if(!tr.length)return'Surts tu: pots tirar qualsevol carta.';
+  const lead=tr[0].c.s,w=tr[winnerOf(tr,T)],mate=team(w.p)===team(0),hand=h.hands[0],L=legal(0);
+  const who=w.p===2?'el company (l\'Anna)':NAMES[w.p];
+  if(hand.some(c=>c.s===lead)){
+    if(mate)return`Has de tirar ${SN[lead]}. Guanya ${who}: no cal que el superis.`;
+    if(w.c.s===lead)return L.some(c=>STR(c.r)>STR(w.c.r))?`Has de tirar ${SN[lead]} i superar el ${cname(w.c)} ${w.p===1?"d'en Pep":'de la Rosa'}.`:`Has de tirar ${SN[lead]}. No pots superar el ${cname(w.c)}: tira la que vulguis del pal.`;
+    return`Has de tirar ${SN[lead]}. ${NAMES[w.p]} ha fallat amb trumfo, i no cal que el superis.`;
+  }
+  if(mate)return`No tens ${SN[lead]} i guanya ${who}: pots tirar qualsevol carta.`;
+  if(T==='bot')return`No tens ${SN[lead]} i en botifarra no hi ha trumfo: pots tirar qualsevol carta.`;
+  const trs=hand.filter(c=>c.s===T);
+  if(!trs.length)return`No tens ${SN[lead]} ni trumfo (${SN[T]}): pots tirar qualsevol carta.`;
+  if(w.c.s===T)return L.every(c=>c.s===T)?`No tens ${SN[lead]} i el rival ha fallat: has de superar-lo amb un trumfo més alt.`:`No tens ${SN[lead]} i no pots superar el trumfo del rival: pots tirar qualsevol carta.`;
+  return`No tens ${SN[lead]} i guanya un rival: has de fallar, és a dir, tirar ${SN[T]}.`;
 }
 
 /* ---------- Dibuix ---------- */
@@ -347,10 +395,24 @@ function render(){
   $('#trick').innerHTML=h.trick.map((x,i)=>`<div class="tc pos${x.p}${i===wi?' win':''}">${cardHTML(x.c)}</div>`).join('');
   const my=h.phase==='play'&&h.turn===0&&h.trick.length<4,L=my?new Set(legal(0).map(id)):new Set();
   $('#hand').classList.toggle('myturn',my);
-  $('#hand').innerHTML=h.hands[0].map(c=>`<button class="cb${my&&L.has(id(c))?' ok':''}${my&&!L.has(id(c))?' no':''}" data-c="${id(c)}" aria-label="${cname(c)}" ${my&&L.has(id(c))?'':'tabindex="-1"'}>${cardHTML(c)}</button>`).join('');
+  $('#hand').innerHTML=h.hands[0].map(c=>`<button class="cb${my&&ui.sug===id(c)?' sug':''}${my&&L.has(id(c))?' ok':''}${my&&!L.has(id(c))?' no':''}" data-c="${id(c)}" aria-label="${cname(c)}" ${my&&L.has(id(c))?'':'tabindex="-1"'}>${cardHTML(c)}</button>`).join('');
   $('#me').className='me'+(my?' turn':'');
   $('#me').innerHTML=`${G.dealer===0?'<span class="chip">reparteix</span>':''}<span class="status">${status()}</span>${h.say[0]?`<span class="bubble">${h.say[0]}</span>`:''}`;
-  layoutHand();renderSheet();
+  layoutHand();renderHelp(my);renderSheet();
+}
+function renderHelp(my){
+  const h=G.h,el=$('#help');let html='';
+  if(G.opts.help&&!ui.sheet){
+    if(my){
+      const c=aiCard(0);
+      html=`<p>${explain()}${ui.sug?`<br><b>Consell: ${cname(c)}.</b> ${WHY}`:''}</p>${ui.sug?'':'<button class="linkbtn" data-act="sug">Què tiro?</button>'}`;
+    }else if(h.phase==='choose'&&h.chooser===0){
+      const d=chooseDecision(0);html=`<p><b>Consell: ${d.a==='bot'?'botifarra':d.a==='del'?'delega':SC[d.a].toLowerCase()}.</b> ${d.why}</p>`;
+    }else if(h.phase==='dbl'&&h.ask){
+      html=`<p>${aiDouble(0,h.dblStep)?'<b>Consell: digues-ho.</b> Tens una mà forta.':'<b>Consell: passa.</b> Si dius '+LEVEL[h.dblStep].toLowerCase()+' i perds la mà, els rivals també cobren el doble.'}</p>`;
+    }
+  }
+  el.hidden=!html;el.innerHTML=html;
 }
 function status(){
   const h=G.h;
@@ -371,12 +433,14 @@ function layoutHand(){
 
 function renderSheet(){
   const h=G.h;let html='';
-  if(ui.sheet==='menu')html=menuHTML();
+  if(ui.sheet==='tut')html=tutHTML();
+  else if(ui.sheet==='menu')html=menuHTML();
   else if(ui.sheet==='rules')html=rulesHTML();
   else if(ui.sheet==='last'&&h.last)html=lastHTML();
   else if(h.phase==='choose'&&h.chooser===0){
     const del=!h.delegated&&G.dealer===0;
     html=`<h2>Fes trumfo</h2><p>${h.delegated?'L\'Anna t\'ha delegat el trumfo.':'Mira la teva mà i tria el pal de trumfo.'}</p>
+     ${G.opts.help?(d=>`<div class="key"><b>Consell: ${d.a==='bot'?'botifarra':d.a==='del'?'delega':SC[d.a].toLowerCase()}.</b> ${d.why}</div>`)(chooseDecision(0)):''}
      <div class="opts">${SUITS.map(s=>`<button class="opt" data-tr="${s}">${icon(s,28)}<span>${SC[s]}<small>${h.hands[0].filter(c=>c.s===s).length} cartes</small></span></button>`).join('')}
      <button class="opt wide" data-tr="bot"><span class="bot">B</span><span>Botifarra<small>Sense trumfo · val el doble</small></span></button>
      ${del?`<button class="opt wide" data-tr="del">Delego a l'Anna</button>`:''}</div>`;
@@ -385,6 +449,7 @@ function renderSheet(){
     const st=h.dblStep,nx=(h.trump==='bot'?2:1)*[1,2,4,8][st];
     const ctx=st===1?`${h.chooser===0?'Has':NAMES[h.chooser]+' ha'} fet ${h.trump==='bot'?'botifarra':SC[h.trump].toLowerCase()}.`:`Ells han dit ${LEVEL[st-1].toLowerCase()}.`;
     html=`<h2>${LEVEL[st]}?</h2><p>${ctx} Si dius ${LEVEL[st].toLowerCase()}, la mà val <b>×${nx}</b>.</p>
+     ${G.opts.help?`<div class="key">${aiDouble(0,st)?'<b>Consell: digues-ho.</b> Tens una mà forta.':'<b>Consell: passa.</b> Si dius '+LEVEL[st].toLowerCase()+' i perds, els rivals cobren el doble.'}</div>`:''}
      <div class="row"><button class="btn primary" data-dbl="1">${LEVEL[st]}</button><button class="btn" data-dbl="0">Passo</button></div>`;
   }
   else if(h.phase==='end'){
@@ -404,6 +469,7 @@ function menuHTML(){
   return `<h2>Menú</h2>
    <div class="form">
     <label for="o-speed">Velocitat dels altres<select id="o-speed"><option value="1"${o.speed==1?' selected':''}>Normal</option><option value="2"${o.speed==2?' selected':''}>Ràpida</option><option value="0.6"${o.speed==0.6?' selected':''}>Lenta</option></select></label>
+    <label for="o-help">Pistes a cada torn<input type="checkbox" id="o-help"${o.help?' checked':''}></label>
     <label for="o-pts">Mostra el valor de les cartes<input type="checkbox" id="o-pts"${o.showPts?' checked':''}></label>
    </div>
    ${G.hist.length?`<table class="res"><tr><th>Mà</th><th>Trumfo</th><th>Punts</th><th>Puntua</th></tr>${G.hist.map((x,i)=>`<tr><td>${i+1}</td><td>${x.t==='bot'?'Botifarra':SC[x.t]}${x.c?' · '+LEVEL[x.c]:''}</td><td>${x.p[0]}–${x.p[1]}</td><td>${x.team===null?'—':(x.team===0?'Nosaltres ':'Ells ')+'+'+x.g}</td></tr>`).join('')}</table>`:''}
@@ -431,6 +497,56 @@ function rulesHTML(){
    <p>Les regles de la botifarra canvien una mica segons el lloc. Aquí hi ha les més esteses.</p></div>
    <button class="btn primary" data-act="${G.h.phase==='end'||!ui.fromMenu?'close':'menu'}">Tanca</button>`;
 }
+const C=(s,r)=>cardHTML({s,r});
+const fig=(items,win)=>`<div class="cards mini">${items.map(([s,r,l],i)=>`<div class="${i===win?'win':''}">${C(s,r)}${l?`<div class="lbl">${l}</div>`:''}</div>`).join('')}</div>`;
+const TUT=[
+ ['Com va la botifarra',()=>`<p>Es juga a quatre, en dues parelles. Tu jugues amb l'Anna, que seu davant teu, contra en Pep i la Rosa.</p>
+   <p>A cada mà es reparteixen les 48 cartes, 12 per cap, i es juguen 12 <b>bases</b>. A cada basa, tothom tira una carta i qui tira la més forta s'emporta les quatre.</p>
+   <p>L'objectiu és que la teva parella s'emporti més de la meitat dels punts de la mà.</p>`],
+ ['Les cartes i el que valen',()=>`${fig([['c',9,'manilla'],['c',1,'as'],['c',12,'rei'],['c',11,'cavall'],['c',10,'sota'],['c',8,'8'],['c',2,'2']])}
+   <p>La carta més forta és el <b>9, que es diu manilla</b>. Després venen l'as, el rei (12), el cavall (11) i la sota (10). Del 8 al 2 van de més a menys.</p>
+   <table class="pts"><tr><td>Manilla (9)</td><td>5 punts</td></tr><tr><td>As (1)</td><td>4</td></tr><tr><td>Rei (12)</td><td>3</td></tr><tr><td>Cavall (11)</td><td>2</td></tr><tr><td>Sota (10)</td><td>1</td></tr><tr><td>Del 8 al 2</td><td>0</td></tr></table>
+   <p>Cada basa guanyada suma 1 punt més. En total hi ha 72 punts, així que per guanyar la mà cal fer-ne <b>més de 36</b>.</p>
+   <div class="key">Les cartes amb punts porten el valor en un cercle a la cantonada.</div>`],
+ ['Una basa',()=>`${fig([['e',12,'Pep surt'],['e',1,'Anna'],['e',5,'Rosa'],['e',9,'Tu']],3)}
+   <p>Qui surt tria el pal. Els altres, si en tenen, han de tirar del mateix pal. Guanya la carta més alta d'aquest pal.</p>
+   <p>Aquí guanyes tu amb la manilla i t'emportes 3 + 4 + 0 + 5 = 12 punts, més 1 per la basa: <b>13 punts</b>. Qui guanya una basa surt a la següent.</p>`],
+ ['El trumfo',()=>`${fig([['b',9,'Pep surt'],['b',3,'Anna'],['c',2,'Rosa'],['b',7,'Tu']],2)}
+   <p>A cada mà hi ha un pal que mana, el <b>trumfo</b>. Qualsevol carta de trumfo guanya les cartes dels altres pals.</p>
+   <p>En aquest exemple el trumfo és copes. La Rosa no té bastos, tira un 2 de copes i guanya la manilla d'en Pep.</p>
+   <div class="key">Només pots tirar trumfo sobre un altre pal quan no en tens, del pal que ha sortit.</div>`],
+ ['Què estàs obligat a tirar',()=>`<ul>
+   <li><b>Servir:</b> si tens el pal que ha sortit, l'has de tirar.</li>
+   <li><b>Matar:</b> si la basa la guanya un rival amb aquest pal, l'has de superar si pots.</li>
+   <li><b>Fallar:</b> si no tens el pal i guanya un rival, has de tirar trumfo. Si el rival ja n'ha tirat, l'has de superar si pots.</li>
+   <li><b>El company:</b> si la basa la guanya el teu company, només has de servir. Si no tens el pal, pots tirar qualsevol carta.</li></ul>
+   <div class="key">El joc enfosqueix les cartes que no pots tirar. Amb les pistes activades, a més, t'explica per què.</div>`],
+ ['Fer trumfo',()=>`<p>Qui reparteix mira la seva mà i tria el trumfo. Es reparteix per torns, cap a la dreta.</p>
+   <ul><li>Tria el pal on tinguis <b>més cartes</b>, sobretot si hi tens la manilla o l'as.</li>
+   <li>Amb tres o quatre manilles, pots dir <b>botifarra</b>: sense trumfo, i la mà val el doble.</li>
+   <li>Si tens una mà fluixa, <b>delega</b>: tria el company. Només pot delegar qui reparteix.</li></ul>`],
+ ['Contro, recontro i Sant Vicenç',()=>`<p>Un cop triat el trumfo, els rivals poden dir <b>contro</b> si creuen que guanyaran la mà: la mà val el doble.</p>
+   <p>La parella que ha fet trumfo pot respondre <b>recontro</b> (×4), i els rivals encara poden dir <b>Sant Vicenç</b> (×8).</p>
+   <div class="key">Per començar, digues passo, tret que tinguis molts trumfos i manilles.</div>`],
+ ['Com es compta',()=>`<p>En acabar la mà, la parella que passa de 36 cobra la diferència, multiplicada pel valor de la mà.</p>
+   <table class="pts"><tr><td>Feu 45 punts, trumfo copes</td><td>45 − 36 = 9</td></tr><tr><td>El mateix amb contro</td><td>9 × 2 = 18</td></tr><tr><td>Botifarra amb contro</td><td>9 × 4 = 36</td></tr><tr><td>Empat a 36</td><td>ningú</td></tr></table>
+   <p>Guanya la parella que arriba primer als punts de la partida, normalment 101.</p>`],
+ ['Consells per jugar millor',()=>`<ul>
+   <li>Quan el company ja té la basa guanyada, hi pots posar cartes amb punts. D'això se'n diu <b>carregar</b>.</li>
+   <li>Quan guanya un rival, mata amb la carta més baixa que puguis o tira'n una sense punts.</li>
+   <li>No surtis amb un as si la manilla d'aquell pal encara no ha sortit: te'l poden matar.</li>
+   <li>Recorda quines manilles han sortit. Si la teva carta és la més alta que queda, és segura.</li>
+   <li>Si el trumfo l'heu fet vosaltres i en teniu molts, sortiu de trumfo per gastar els dels rivals.</li></ul>`],
+ ['Ara, a jugar',()=>`<p>La millor manera d'aprendre és jugant amb les <b>pistes</b> activades. A cada torn veuràs quines cartes pots tirar i per què, i amb el botó «Què tiro?» tindràs un consell de jugada.</p>
+   <p>Les pistes es poden treure quan vulguis des del menú.</p>
+   <div class="row"><button class="btn primary" data-act="tutplay">Juga amb pistes</button></div>`],
+];
+function tutHTML(){
+  const i=ui.tut||0,[t,f]=TUT[i];
+  return `<div class="dots">${TUT.map((_,k)=>`<i class="${k===i?'on':''}"></i>`).join('')}</div>
+   <h2>${t}</h2><div class="tut" style="display:flex;flex-direction:column;gap:10px">${f()}</div>
+   <div class="row"><button class="btn" data-act="${i?'tutprev':'close'}">${i?'Anterior':'Tanca'}</button>${i<TUT.length-1?`<button class="btn primary" data-act="tutnext">Següent</button>`:''}</div>`;
+}
 function lastHTML(){
   const l=G.h.last,wi=l.trick.findIndex(x=>x.p===l.w);
   return `<h2>Última basa</h2><div class="lasttrick">${l.trick.map((x,i)=>`<div class="${i===wi?'win':''}">${cardHTML(x.c)}<div class="who">${NAMES[x.p]}</div></div>`).join('')}</div>
@@ -450,7 +566,12 @@ document.addEventListener('click',e=>{
   if(b.dataset.dbl){resolveDbl(b.dataset.dbl==='1',0);return;}
   const a=b.dataset.act;
   if(a==='menu'){ui.sheet='menu';ui.confirmNew=false;ui.fromMenu=true;render();}
-  else if(a==='close'){ui.sheet=null;ui.fromMenu=false;render();}
+  else if(a==='tut'){ui.sheet='tut';ui.tut=0;render();}
+  else if(a==='tutnext'){ui.tut++;render();$('#panel').scrollTop=0;}
+  else if(a==='tutprev'){ui.tut--;render();$('#panel').scrollTop=0;}
+  else if(a==='tutplay'){G.opts.help=true;ui.sheet=null;save();step();}
+  else if(a==='sug'){ui.sug=id(aiCard(0));render();}
+  else if(a==='close'){ui.sheet=null;ui.fromMenu=false;step();}
   else if(a==='rules'){ui.sheet='rules';render();}
   else if(a==='last'){ui.sheet='last';ui.fromMenu=false;render();}
   else if(a==='new'){ui.confirmNew=true;render();}
@@ -463,12 +584,13 @@ document.addEventListener('change',e=>{
   const t=e.target;
   if(t.id==='o-speed'){G.opts.speed=+t.value;save();}
   else if(t.id==='o-pts'){G.opts.showPts=t.checked;save();render();}
+  else if(t.id==='o-help'){G.opts.help=t.checked;save();render();}
 });
 addEventListener('resize',layoutHand);
 
 const saved=load();
-if(saved&&saved.h&&saved.opts){G=saved;step();}
-else newGame({target:101,contro:true,sv:true,speed:1,showPts:true});
+if(saved&&saved.h&&saved.opts){G=saved;if(G.opts.help===undefined)G.opts.help=true;step();}
+else{newGame({target:101,contro:true,sv:true,speed:1,showPts:true,help:true});ui.sheet='tut';ui.tut=0;step();}
 </script>
 <script>if('serviceWorker' in navigator){addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));}</script>
 </body>
